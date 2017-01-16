@@ -12,6 +12,8 @@ class MainActivityViewModel {
 
     val lastName = ObservableField("Grosner")
 
+    val formInput = ObservableField("")
+
     val selected = ObservableBoolean()
 
     fun onFirstNameClick() {

@@ -384,6 +384,7 @@ open class CallbackRegistry<C, T, A>
     @Synchronized public override fun clone(): CallbackRegistry<C, T, A> {
         var clone: CallbackRegistry<C, T, A>? = null
         try {
+            @Suppress("UNCHECKED_CAST")
             clone = super.clone() as CallbackRegistry<C, T, A>
             clone.mFirst64Removed = 0
             clone.mRemainderRemoved = null

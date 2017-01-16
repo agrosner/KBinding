@@ -3,6 +3,8 @@ package com.andrewgrosner.okbinding.sample
 import android.content.Context
 import android.view.View
 import com.andrewgrosner.okbinding.bindTo
+import com.andrewgrosner.okbinding.text
+import com.andrewgrosner.okbinding.twoWayText
 import org.jetbrains.anko.*
 
 /**
@@ -17,13 +19,20 @@ class MainActivityLayout(context: Context, val viewModel: MainActivityViewModel)
             verticalLayout {
 
                 textView {
-                    viewModel.firstName bindTo { text = it }
+                    viewModel.firstName bindTo { firstName ->
+                        text = firstName
+                        visibility = if (firstName.isNotBlank()) View.VISIBLE else View.GONE
+                    }
                     onClick { viewModel.onFirstNameClick() }
                 }
 
                 textView {
-                    viewModel.lastName bindTo { text = it }
-                    onClick { viewModel.onLastNameClick() }¬
+                    text(viewModel.lastName)
+                    onClick { viewModel.onLastNameClick() }
+                }
+
+                editText {
+                    twoWayText(viewModel.formInput)
                 }
 
                 switch {
