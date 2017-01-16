@@ -11,6 +11,8 @@ import org.jetbrains.anko.*
 class MainActivityLayout(context: Context, mainActivityViewModel: MainActivityViewModel)
     : ViewModelComponent<MainActivity, MainActivityViewModel>(mainActivityViewModel) {
 
+    val mutableField = ObservableField("")
+
     override fun createView(ui: AnkoContext<MainActivity>): View {
         return with(ui) {
             verticalLayout {
@@ -24,7 +26,9 @@ class MainActivityLayout(context: Context, mainActivityViewModel: MainActivityVi
                 }
 
                 textView {
-                    text(viewModel.lastName)
+                    text(viewModel.lastName,
+                            defaultValue = "Defaulted",
+                            ifNull = { "Not Null" })
                     onClick { viewModel.onLastNameClick() }
                 }
 
@@ -34,6 +38,10 @@ class MainActivityLayout(context: Context, mainActivityViewModel: MainActivityVi
 
                 switch {
                     twoWayChecked(viewModel.selected)
+                }
+
+                textView {
+                    text(mutableField)
                 }
             }
         }
