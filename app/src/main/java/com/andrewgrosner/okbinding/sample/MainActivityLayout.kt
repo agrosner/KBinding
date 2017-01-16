@@ -1,49 +1,56 @@
 package com.andrewgrosner.okbinding.sample
 
-import android.content.Context
 import android.view.View
+import android.widget.TextView
 import com.andrewgrosner.okbinding.*
 import org.jetbrains.anko.*
 
 /**
  * Description:
  */
-class MainActivityLayout(context: Context, mainActivityViewModel: MainActivityViewModel)
+class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
     : ViewModelComponent<MainActivity, MainActivityViewModel>(mainActivityViewModel) {
 
     val mutableField = ObservableField("")
+
 
     override fun createView(ui: AnkoContext<MainActivity>): View {
         return with(ui) {
             verticalLayout {
 
                 textView {
-                    viewModel.firstName bindTo { firstName ->
+                    id = R.id.firstName
+                    bind(viewModel.firstName toUpdates { firstName ->
                         text = firstName
                         visibility = if (firstName.isNotBlank()) View.VISIBLE else View.GONE
-                    }
+                    })
                     onClick { viewModel.onFirstNameClick() }
                 }
 
                 textView {
-                    text(viewModel.lastName,
+                    bind(text(viewModel.lastName,
                             defaultValue = "Defaulted",
-                            ifNull = { "Not Null" })
+                            ifNull = { "Not Null" }))
                     onClick { viewModel.onLastNameClick() }
                 }
 
                 editText {
-                    twoWayText(viewModel.formInput)
+                    bind(twoWayText(viewModel.formInput))
                 }
 
                 switch {
-                    twoWayChecked(viewModel.selected)
+                    bind(twoWayChecked(viewModel.selected))
                 }
 
                 textView {
-                    text(mutableField)
+                    bind(text(mutableField))
+                }
+
+                textView {
+                    bind(text(MainActivityViewModel::normalField))
                 }
             }
         }
     }
+
 }

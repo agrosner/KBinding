@@ -35,22 +35,21 @@ interface Observable {
      * Adds a callback to listen for changes to the Observable.
      * @param callback The callback to start listening.
      */
-    fun addOnPropertyChangedCallback(callback: (Observable, Int) -> Unit)
+    fun addOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit)
 
     /**
      * Removes a callback from those listening for changes.
      * @param callback The callback that should stop listening.
      */
-    fun removeOnPropertyChangedCallback(callback: (Observable, Int) -> Unit)
+    fun removeOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit)
 
 }
-
 
 open class BaseObservable : Observable {
     @Transient private var mCallbacks: PropertyChangeRegistry? = null
 
     @Synchronized
-    override fun addOnPropertyChangedCallback(callback: (Observable, Int) -> Unit) {
+    override fun addOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit) {
         if (mCallbacks == null) {
             mCallbacks = PropertyChangeRegistry()
         }
@@ -58,14 +57,9 @@ open class BaseObservable : Observable {
     }
 
     @Synchronized
-    override fun removeOnPropertyChangedCallback(callback: (Observable, Int) -> Unit) {
+    override fun removeOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit) {
         mCallbacks?.remove(callback)
     }
-
-    /**
-     * Notifies listeners that all properties of this instance have changed.
-     */
-    @Synchronized fun notifyChange() = mCallbacks?.notifyCallbacks(this, 0, null)
 
     /**
      * Notifies listeners that a specific property has changed. The getter for the property
@@ -74,7 +68,7 @@ open class BaseObservable : Observable {
 
      * @param fieldId The generated BR id for the Bindable field.
      */
-    fun notifyPropertyChanged(fieldId: Int) = mCallbacks?.notifyCallbacks(this, fieldId, null)
+    @Synchronized fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyCallbacks(this, property, null)
 }
 
 

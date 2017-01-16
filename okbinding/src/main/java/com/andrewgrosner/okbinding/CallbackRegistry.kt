@@ -1,6 +1,7 @@
 package com.andrewgrosner.okbinding
 
 import java.util.*
+import kotlin.reflect.KProperty
 
 /**
  * A utility for storing and notifying callbacks. This class supports reentrant modification
@@ -29,7 +30,7 @@ open class CallbackRegistry<C, T, A>
 /**
  * Creates an EventRegistry that notifies the event with notifier.
  * @param notifier The class to use to notify events.
- */(val notifier: (C, T, Int, A) -> Unit) : Cloneable {
+ */(val notifier: (C, T, KProperty<*>?, A) -> Unit) : Cloneable {
 
     companion object {
 
@@ -69,9 +70,9 @@ open class CallbackRegistry<C, T, A>
      * @param arg2 An opaque parameter passed to
      * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
      */
-    @Synchronized fun notifyCallbacks(sender: T, arg: Int, arg2: A) {
+    @Synchronized fun notifyCallbacks(sender: T, property: KProperty<*>?, arg2: A) {
         mNotificationLevel++
-        notifyRecurse(sender, arg, arg2)
+        notifyRecurse(sender, property, arg2)
         mNotificationLevel--
         if (mNotificationLevel == 0) {
             val remainderRemoved = mRemainderRemoved
@@ -103,9 +104,9 @@ open class CallbackRegistry<C, T, A>
      * @param arg2 An opaque parameter passed to
      * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
      */
-    private fun notifyFirst64(sender: T, arg: Int, arg2: A) {
+    private fun notifyFirst64(sender: T, property: KProperty<*>?, arg2: A) {
         val maxNotified = Math.min(java.lang.Long.SIZE, mCallbacks.size)
-        notifyCallbacks(sender, arg, arg2, 0, maxNotified, mFirst64Removed)
+        notifyCallbacks(sender, property, arg2, 0, maxNotified, mFirst64Removed)
     }
 
     /**
@@ -125,21 +126,21 @@ open class CallbackRegistry<C, T, A>
      * @param arg2 An opaque parameter passed to
      * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
      */
-    private fun notifyRecurse(sender: T, arg: Int, arg2: A) {
+    private fun notifyRecurse(sender: T, property: KProperty<*>?, arg2: A) {
         val callbackCount = mCallbacks.size
         val remainderRemoved = mRemainderRemoved
         val remainderIndex = if (remainderRemoved == null) -1 else remainderRemoved.size - 1
 
         // Now we've got all callbakcs that have no mRemainderRemoved value, so notify the
         // others.
-        notifyRemainder(sender, arg, arg2, remainderIndex)
+        notifyRemainder(sender, property, arg2, remainderIndex)
 
         // notifyRemainder notifies all at maxIndex, so we'd normally start at maxIndex + 1
         // However, we must also keep track of those in mFirst64Removed, so we add 2 instead:
         val startCallbackIndex = (remainderIndex + 2) * java.lang.Long.SIZE
 
         // The remaining have no bit set
-        notifyCallbacks(sender, arg, arg2, startCallbackIndex, callbackCount, 0)
+        notifyCallbacks(sender, property, arg2, startCallbackIndex, callbackCount, 0)
     }
 
     /**
@@ -157,17 +158,17 @@ open class CallbackRegistry<C, T, A>
      * *
      * @param remainderIndex The index into mRemainderRemoved that should be notified.
      */
-    private fun notifyRemainder(sender: T, arg: Int, arg2: A, remainderIndex: Int) {
+    private fun notifyRemainder(sender: T, property: KProperty<*>?, arg2: A, remainderIndex: Int) {
         if (remainderIndex < 0) {
-            notifyFirst64(sender, arg, arg2)
+            notifyFirst64(sender, property, arg2)
         } else {
             val remainderRemoved = mRemainderRemoved
             if (remainderRemoved != null) {
                 val bits = remainderRemoved[remainderIndex]
                 val startIndex = (remainderIndex + 1) * java.lang.Long.SIZE
                 val endIndex = Math.min(mCallbacks.size, startIndex + java.lang.Long.SIZE)
-                notifyRemainder(sender, arg, arg2, remainderIndex - 1)
-                notifyCallbacks(sender, arg, arg2, startIndex, endIndex, bits)
+                notifyRemainder(sender, property, arg2, remainderIndex - 1)
+                notifyCallbacks(sender, property, arg2, startIndex, endIndex, bits)
             }
         }
     }
@@ -194,12 +195,12 @@ open class CallbackRegistry<C, T, A>
      * @param bits A bit field indicating which callbacks have been removed and shouldn't
      * *             be notified.
      */
-    private fun notifyCallbacks(sender: T, arg: Int, arg2: A, startIndex: Int,
+    private fun notifyCallbacks(sender: T, property: KProperty<*>?, arg2: A, startIndex: Int,
                                 endIndex: Int, bits: Long) {
         var bitMask: Long = 1
         for (i in startIndex..endIndex - 1) {
             if (bits and bitMask == 0L) {
-                notifier(mCallbacks[i], sender, arg, arg2)
+                notifier(mCallbacks[i], sender, property, arg2)
             }
             bitMask = bitMask shl 1
         }
@@ -408,7 +409,7 @@ open class CallbackRegistry<C, T, A>
 /**
  * Utility class for managing Observable callbacks.
  */
-class PropertyChangeRegistry : CallbackRegistry<(Observable, Int) -> Unit, Observable, Unit?>
+class PropertyChangeRegistry : CallbackRegistry<(Observable, KProperty<*>?) -> Unit, Observable, Unit?>
 (notifierCallback) {
 
     /**
@@ -419,14 +420,14 @@ class PropertyChangeRegistry : CallbackRegistry<(Observable, Int) -> Unit, Obser
      * @param propertyId The BR id of the property that has changed or BR._all if the entire
      * *                   Observable has changed.
      */
-    fun notifyChange(observable: Observable, propertyId: Int) {
-        notifyCallbacks(observable, propertyId, null)
+    fun notifyChange(observable: Observable, property: KProperty<*>? = null) {
+        notifyCallbacks(observable, property, null)
     }
 
     companion object {
-        val notifierCallback = { callback: (Observable, Int) -> Unit,
-                                 sender: Observable, arg: Int, notUsed: Unit? ->
-            callback(sender, arg)
+        val notifierCallback = { callback: (Observable, KProperty<*>?) -> Unit,
+                                 sender: Observable, property: KProperty<*>?, notUsed: Unit? ->
+            callback(sender, property)
         }
     }
 

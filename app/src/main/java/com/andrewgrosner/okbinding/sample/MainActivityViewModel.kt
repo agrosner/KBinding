@@ -1,20 +1,26 @@
 package com.andrewgrosner.okbinding.sample
 
-import com.andrewgrosner.okbinding.ObservableBoolean
-import com.andrewgrosner.okbinding.ObservableField
+import com.andrewgrosner.okbinding.BaseObservable
+import com.andrewgrosner.okbinding.observable
 
 /**
  * Description:
  */
-class MainActivityViewModel {
+class MainActivityViewModel : BaseObservable() {
 
-    val firstName = ObservableField("Andrew")
+    val firstName = observable("Andrew")
 
-    val lastName = ObservableField("Grosner")
+    val lastName = observable("Grosner")
 
-    val formInput = ObservableField("")
+    val formInput = observable("")
 
-    val selected = ObservableBoolean()
+    val selected = observable(false)
+
+    var normalField = ""
+        set(value) {
+            field = value
+            notifyChange(MainActivityViewModel::normalField)
+        }
 
     fun onFirstNameClick() {
 

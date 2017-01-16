@@ -6,23 +6,34 @@ import android.text.TextWatcher
 import android.widget.CompoundButton
 import android.widget.TextView
 import org.jetbrains.anko.onCheckedChange
+import kotlin.reflect.KProperty
 
-infix fun <T> ObservableField<T>.bindTo(function: (T) -> Unit) = addOnPropertyChangedCallback {
-    observable, i ->
-    @Suppress("UNCHECKED_CAST")
-    function((observable as ObservableField<T>).value)
+infix fun <T> ObservableField<T>.toUpdates(function: (T) -> Unit): BoundObservableField {
+    val callback: (Observable, Int) -> Unit = {
+        observable, i ->
+        @Suppress("UNCHECKED_CAST")
+        function((observable as ObservableField<T>).value)
+    }
+    addOnPropertyChangedCallback(callback)
+    return BoundObservableField(this, callback)
 }
 
-infix fun ObservableBoolean.bindTo(function: (Boolean) -> Unit) = addOnPropertyChangedCallback {
-    observable, i ->
-    @Suppress("UNCHECKED_CAST")
-    function((observable as ObservableBoolean).value)
+infix fun ObservableBoolean.toUpdates(function: (Boolean) -> Unit): BoundObservableField {
+    val callback: (Observable, Int) -> Unit = {
+        observable, i ->
+        @Suppress("UNCHECKED_CAST")
+        function((observable as ObservableBoolean).value)
+    }
+    addOnPropertyChangedCallback(callback)
+    return BoundObservableField(this, callback)
 }
 
-infix fun ObservableByte.bindTo(function: (Byte) -> Unit) = addOnPropertyChangedCallback {
-    observable, i ->
-    @Suppress("UNCHECKED_CAST")
-    function((observable as ObservableByte).value)
+infix fun ObservableByte.toUpdates(function: (Byte) -> Unit) {
+    addOnPropertyChangedCallback {
+        observable, i ->
+        @Suppress("UNCHECKED_CAST")
+        function((observable as ObservableByte).value)
+    }
 }
 
 /**
@@ -31,13 +42,27 @@ infix fun ObservableByte.bindTo(function: (Byte) -> Unit) = addOnPropertyChanged
  */
 inline fun <reified T : CharSequence?> TextView.text(observableField: ObservableField<T>,
                                                      defaultValue: T? = null,
-                                                     noinline ifNull: (() -> T)? = null) {
+                                                     noinline ifNull: (() -> T)? = null): BoundObservableField {
     if (defaultValue != null) {
         setText(this@text, defaultValue)
     }
-    observableField bindTo {
+    return observableField toUpdates {
         setText(this@text, if (ifNull != null && it == null) ifNull() else it)
     }
+}
+
+
+/**
+ * Set text on a [TextView]. Executes a ifNull if specified if the value is found to be null.
+ * Set the initial value to be [defaultValue] if specified (not null).
+ */
+inline fun <reified T : CharSequence?> TextView.text(field: KProperty<T>,
+                                                     noinline ifNull: (() -> T)? = null): BoundField<T, TextView> {
+    val value = field.call()
+    if (value != null) {
+        setText(this@text, value)
+    }
+    return BoundField(this, field, { view, t -> view.text = t })
 }
 
 /**
@@ -47,8 +72,7 @@ inline fun <reified T : CharSequence?> TextView.text(observableField: Observable
  */
 inline fun <reified T : CharSequence> TextView.twoWayText(observableField: ObservableField<T>,
                                                           defaultValue: T? = null,
-                                                          noinline ifNull: (() -> T)? = null) {
-    text(observableField, defaultValue, ifNull)
+                                                          noinline ifNull: (() -> T)? = null): BoundObservableField {
     addTextChangedListener(object : TextWatcher {
         override fun afterTextChanged(s: Editable?) = Unit
 
@@ -60,22 +84,23 @@ inline fun <reified T : CharSequence> TextView.twoWayText(observableField: Obser
             }
         }
     })
+    return text(observableField, defaultValue, ifNull)
 }
 
 fun CompoundButton.checked(boolean: ObservableBoolean,
-                           defaultValue: Boolean? = null) {
+                           defaultValue: Boolean? = null): BoundObservableField {
     if (defaultValue != null) {
         isChecked = defaultValue
     }
-    boolean bindTo { if (isChecked != it) isChecked = it }
+    return boolean toUpdates { if (isChecked != it) isChecked = it }
 }
 
 fun CompoundButton.twoWayChecked(boolean: ObservableBoolean,
-                                 defaultValue: Boolean? = null) {
-    checked(boolean, defaultValue)
+                                 defaultValue: Boolean? = null): BoundObservableField {
     onCheckedChange { view, checked ->
         if (boolean.value != checked) boolean.value = checked
     }
+    return checked(boolean, defaultValue)
 }
 
 fun setText(view: TextView, text: CharSequence?) {
