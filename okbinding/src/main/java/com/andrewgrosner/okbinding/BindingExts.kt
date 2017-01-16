@@ -3,7 +3,9 @@ package com.andrewgrosner.okbinding
 import android.text.Editable
 import android.text.Spanned
 import android.text.TextWatcher
+import android.widget.CompoundButton
 import android.widget.TextView
+import org.jetbrains.anko.onCheckedChange
 
 infix fun <T> ObservableField<T>.bindTo(function: (T) -> Unit) = addOnPropertyChangedCallback {
     observable, i ->
@@ -40,6 +42,17 @@ infix inline fun <reified T : CharSequence> TextView.twoWayText(observableField:
             }
         }
     })
+}
+
+infix fun CompoundButton.checked(boolean: ObservableBoolean) {
+    boolean bindTo { if (isChecked != it) isChecked = it }
+}
+
+infix fun CompoundButton.twoWayChecked(boolean: ObservableBoolean) {
+    boolean bindTo { if (isChecked != it) isChecked = it }
+    onCheckedChange { view, checked ->
+        if (boolean.value != checked) boolean.value = checked
+    }
 }
 
 fun setText(view: TextView, text: CharSequence?) {
