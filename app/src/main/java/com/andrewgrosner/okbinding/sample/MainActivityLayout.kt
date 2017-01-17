@@ -1,7 +1,6 @@
 package com.andrewgrosner.okbinding.sample
 
 import android.view.View
-import android.widget.TextView
 import com.andrewgrosner.okbinding.*
 import org.jetbrains.anko.*
 
@@ -20,34 +19,37 @@ class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
 
                 textView {
                     id = R.id.firstName
-                    bind(viewModel.firstName toUpdates { firstName ->
-                        text = firstName
-                        visibility = if (firstName.isNotBlank()) View.VISIBLE else View.GONE
-                    })
+                    bind(field(MainActivityViewModel::firstName)
+                            .obs(viewModel.firstName)
+                            .toView { view, firstName ->
+                                view.text = firstName
+                                view.visibility = if (firstName.isNotBlank()) View.VISIBLE else View.GONE
+                            })
                     onClick { viewModel.onFirstNameClick() }
                 }
 
                 textView {
-                    bind(text(viewModel.lastName,
-                            defaultValue = "Defaulted",
-                            ifNull = { "Not Null" }))
+                    bind(field(MainActivityViewModel::lastName)
+                            .obs(viewModel.lastName).toText())
                     onClick { viewModel.onLastNameClick() }
                 }
 
                 editText {
-                    bind(twoWayText(viewModel.formInput))
+                    bind(field(MainActivityViewModel::formInput)
+                            .exp { viewModel.formInput }.toText())
                 }
 
                 switch {
-                    bind(twoWayChecked(viewModel.selected))
+                    bind(field(MainActivityViewModel::selected)
+                            .obs(viewModel.selected).toCheckedChange())
                 }
 
                 textView {
-                    bind(text(mutableField))
+
                 }
 
                 textView {
-                    bind(text(MainActivityViewModel::normalField))
+
                 }
             }
         }

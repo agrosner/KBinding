@@ -1,24 +1,33 @@
 package com.andrewgrosner.okbinding
 
-import android.view.View
 import kotlin.reflect.KProperty
 
 /**
  * Description:
  */
-class BindingHolder {¬
+class BindingHolder {
 
-    val boundObservableFields = hashMapOf<Int, BoundObservableField>()
+    val bindings = hashMapOf<KProperty<*>, List<BaseBindingObject<*, *>>>()
 
-    val boundFields = hashMapOf<Int, BoundField<*, View>>()
-
-    fun unregisterAll() {
-        boundObservableFields.values.forEach { it.observable.removeOnPropertyChangedCallback(it.function) }
-        boundFields.values.clear()
+    fun discardAll() {
+        val uniqueSet = mutableSetOf<BaseBindingObject<*, *>>()
+        bindings.values.forEach { lists -> lists.forEach { uniqueSet += it } }
+        uniqueSet.forEach { it.discard() }
     }
 
+    fun rebind() {
+        val uniqueSet = mutableSetOf<BaseBindingObject<*, *>>()
+        bindings.values.forEach { lists -> lists.forEach { uniqueSet += it } }
+        uniqueSet.forEach { it.rebind() }
+    }
+
+    fun putBinding(baseBindingObject: BaseBindingObject<*, *>) {
+        var bindings = bindings[baseBindingObject.field.property]
+        if (bindings == null) {
+            bindings = arrayListOf()
+            this.bindings[baseBindingObject.field.property] = bindings
+        }
+        bindings += baseBindingObject
+    }
 }
 
-class BoundObservableField(val observable: Observable, val function: (Observable, Int) -> Unit)
-
-class BoundField<T, V : View>(val view: V, val property: KProperty<T>, val setterFunction: (V, T) -> Unit)

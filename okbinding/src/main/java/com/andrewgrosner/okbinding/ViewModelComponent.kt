@@ -1,7 +1,7 @@
 package com.andrewgrosner.okbinding
 
-import android.view.View
 import org.jetbrains.anko.AnkoComponent
+import kotlin.reflect.KProperty
 
 /**
  * Description:
@@ -10,7 +10,7 @@ abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
 
     val holder = BindingHolder()
 
-    val onViewModelChanged = { observable: Observable, id: Int -> onFieldChanged(id) }
+    val onViewModelChanged = { observable: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
     var viewModel: V = viewModel
         set(value) {
@@ -28,21 +28,22 @@ abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
             }
         }
 
-    fun View.bind(boundObservableField: BoundObservableField) {
-        holder.boundObservableFields += id to boundObservableField
-    }
+    fun bind(bindingObject: BaseBindingObject<*, *>) = holder.putBinding(bindingObject)
 
-    fun View.bind(boundField: BoundField<*, View>) {
-        holder.boundFields += id to boundField
-    }
-
-    private fun onFieldChanged(changedFieldId: Int) {
-        val boundField = holder.boundFields[changedFieldId]
-        // reinvoke method with referenced field value
-        boundField?.setterFunction?.invoke(boundField.view, boundField.property.call())
+    private fun onFieldChanged(property: KProperty<*>?) {
+        if (property != null) {
+            holder.bindings[property]?.let { it.forEach { it.rebind() } }
+        } else {
+            // rebind everything if the parent ViewModel changes.
+            holder.rebind()
+        }
     }
 
     fun destroyView() {
-        holder.unregisterAll()
+        val viewModel = viewModel
+        if (viewModel is Observable) {
+            viewModel.removeOnPropertyChangedCallback(onViewModelChanged)
+        }
+        holder.discardAll()
     }
 }
