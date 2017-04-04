@@ -13,7 +13,6 @@ class BindingField<V : View>(val property: KProperty<*>,
 
     fun <T> obs(observable: ObservableField<T>) = ObservableBindingObject(this, observable)
 
-    fun obs(observable: ObservableBoolean) = BooleanObservableBindingObject(this, observable)
 }
 
 abstract class BaseBindingObject<T, V : View>(val field: BindingField<V>) {
@@ -82,17 +81,6 @@ class ObservableBindingObject<T, V : View>(field: BindingField<V>,
 
     override fun rebind() {
         viewOperation?.invoke(field.view, (this.observable as ObservableField<T>).value)
-    }
-
-}
-
-@Suppress("UNCHECKED_CAST")
-class BooleanObservableBindingObject<V : View>(field: BindingField<V>,
-                                               observable: ObservableBoolean)
-    : BaseObservableBindingObject<Boolean, V>(field, observable) {
-
-    override fun rebind() {
-        viewOperation?.invoke(field.view, (this.observable as ObservableBoolean).value)
     }
 
 }

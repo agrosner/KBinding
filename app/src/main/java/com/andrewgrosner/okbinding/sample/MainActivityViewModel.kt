@@ -8,13 +8,13 @@ import com.andrewgrosner.okbinding.observable
  */
 class MainActivityViewModel : BaseObservable() {
 
-    val firstName = observable("Andrew")
+    val firstName = "Andrew"
 
-    val lastName = observable("Grosner")
+    val lastName = "Grosner"
 
-    val formInput: String by observable("")
+    val formInput: String by observable("This should change")
 
-    val selected = observable(false)
+    val selected = observable(true)
 
     var normalField = ""
         set(value) {

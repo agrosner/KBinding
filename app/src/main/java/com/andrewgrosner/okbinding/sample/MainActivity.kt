@@ -11,7 +11,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val viewModel = MainActivityViewModel()
-        MainActivityLayout(viewModel).setContentView(this)
+        MainActivityLayout2(viewModel).setContentView(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

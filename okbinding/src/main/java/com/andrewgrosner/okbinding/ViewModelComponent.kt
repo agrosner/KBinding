@@ -1,5 +1,7 @@
 package com.andrewgrosner.okbinding
 
+import com.andrewgrosner.okbinding.bindings.BindingOn
+import com.andrewgrosner.okbinding.bindings.ObservableBinding
 import org.jetbrains.anko.AnkoComponent
 import kotlin.reflect.KProperty
 
@@ -8,9 +10,11 @@ import kotlin.reflect.KProperty
  */
 abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
 
-    val holder = BindingHolder()
 
-    val onViewModelChanged = { observable: Observable, property: KProperty<*>? -> onFieldChanged(property) }
+    private val bindings = mutableListOf<BindingOn<*, *, *>>()
+    private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<BindingOn<*, *, *>>>()
+
+    val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
     var viewModel: V = viewModel
         set(value) {
@@ -28,14 +32,25 @@ abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
             }
         }
 
-    fun bind(bindingObject: BaseBindingObject<*, *>) = holder.putBinding(bindingObject)
+    fun <Input, Output> oneWay(bindingOn: BindingOn<Input, Output, ObservableBinding<Input>>) {
+        bindings += bindingOn
+    }
+
+    fun <Input, Output> oneWay(kProperty: KProperty<*>, bindingOn: BindingOn<Input, Output, *>) {
+        var mutableList = propertyBindings[kProperty]
+        if (mutableList == null) {
+            mutableList = mutableListOf()
+            propertyBindings[kProperty] = mutableList
+        }
+        mutableList.add(bindingOn)
+    }
 
     private fun onFieldChanged(property: KProperty<*>?) {
         if (property != null) {
-            holder.bindings[property]?.let { it.forEach { it.rebind() } }
+            propertyBindings[property]?.let { it.forEach { it.notifyValueChange() } }
         } else {
             // rebind everything if the parent ViewModel changes.
-            holder.rebind()
+            propertyBindings.forEach { _, bindings -> bindings.forEach { it.notifyValueChange() } }
         }
     }
 
@@ -44,6 +59,10 @@ abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
         if (viewModel is Observable) {
             viewModel.removeOnPropertyChangedCallback(onViewModelChanged)
         }
-        holder.discardAll()
+        bindings.forEach { it.unbind() }
+        bindings.clear()
+
+        propertyBindings.forEach { _, bindings -> bindings.forEach { it.unbind() } }
+        propertyBindings.clear()
     }
 }

@@ -1,8 +1,5 @@
 package com.andrewgrosner.okbinding
 
-import android.os.Parcel
-import android.os.Parcelable
-import java.io.Serializable
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -88,59 +85,7 @@ class ObservableField<T>(private var _value: T) : BaseObservable(), ReadWritePro
 }
 
 /**
- * An observable class that holds a primitive boolean.
- *
- *
- * Observable field classes may be used instead of creating an Observable object:
- * <pre>`public class MyDataObject {
- * public final ObservableBoolean isAdult = new ObservableBoolean();
- * }`</pre>
- * Fields of this type should be declared final because bindings only detect changes in the
- * field's value, not of the field itself.
- *
- *
- * This class is parcelable and serializable but callbacks are ignored when the object is
- * parcelled / serialized. Unless you add custom callbacks, this will not be an issue because
- * data binding framework always re-registers callbacks when the view is bound.
- */
-class ObservableBoolean(var value: Boolean = false) : BaseObservable(),
-        Parcelable, Serializable, ReadWriteProperty<Any?, Boolean> {
-
-    override fun getValue(thisRef: Any?, property: KProperty<*>) = value
-
-    override fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
-        if (value != this.value) {
-            this.value = value
-            if (thisRef is BaseObservable) thisRef.notifyChange(property)
-            notifyChange()
-        }
-    }
-
-    override fun describeContents() = 0
-
-    override fun writeToParcel(dest: Parcel, flags: Int) = dest.writeInt(if (value) 1 else 0)
-
-    companion object {
-        internal const val serialVersionUID = 1L
-
-        @JvmStatic
-        val CREATOR: Parcelable.Creator<ObservableBoolean> = object : Parcelable.Creator<ObservableBoolean> {
-
-            override fun createFromParcel(source: Parcel): ObservableBoolean {
-                return ObservableBoolean(source.readInt() == 1)
-            }
-
-            override fun newArray(size: Int): Array<ObservableBoolean?> {
-                return arrayOfNulls(size)
-            }
-        }
-    }
-}
-
-
-/**
  * Creates new instance of the [Observable] field.
  */
 fun <T> observable(initialValue: T) = ObservableField(initialValue)
 
-fun observable(initialValue: Boolean) = ObservableBoolean(initialValue)
