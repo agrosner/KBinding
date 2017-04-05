@@ -3,4 +3,6 @@
     <item name="firstName" type="id"/>
     <item name="mirrorText"
           type="id"/>
+    <item name="onOff"
+          type="id"/>
 </resources>

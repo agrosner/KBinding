@@ -1,7 +1,6 @@
 package com.andrewgrosner.okbinding.sample
 
 import android.view.View
-import android.widget.TextView
 import com.andrewgrosner.okbinding.BindingComponent
 import com.andrewgrosner.okbinding.bindings.*
 import org.jetbrains.anko.*
@@ -37,11 +36,7 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                 editText {
                     twoWay(MainActivityViewModel::formInput,
                             bindSelf(viewModel.formInput).toTextObs(this)
-                                    .twoWay().toFieldFromText()
-                                    .onExpression {
-                                        val mirrorText = find<TextView>(R.id.mirrorText)
-                                        mirrorText.text = it
-                                    })
+                                    .twoWay().toFieldFromText())
                 }
 
                 switch {
@@ -51,10 +46,15 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                 textView {
                     id = R.id.mirrorText
+                    twoWayBindingFor<String>(MainActivityViewModel::formInput).onExpression { text = it }
                 }
 
                 textView {
-
+                    id = R.id.onOff
+                    twoWayBindingFor(viewModel.selected).onExpression {
+                        val selected = it ?: false
+                        text = if (selected) "On" else "Off"
+                    }
                 }
             }
         }
