@@ -108,11 +108,14 @@ class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
     : BindingComponent<MainActivity, MainActivityViewModel>(mainActivityViewModel) {
 ```
 
+Instead of overridding `createView()`, we override `createViewWithBindings()`. This is
+so we internally can bind all created bindings after view is created.
+
 Then to bind views:
 
 ```kotlin
 
-override fun createView(ui: AnkoContext<MainActivity>): View {
+override fun createViewWithBindings(ui: AnkoContext<MainActivity>): View {
         return with(ui) {
           textView {
             twoWay(UserViewModel::name,
@@ -147,9 +150,7 @@ override fun onDestroy() {
 
 ## Supported bindings
 
-Currently we support two kinds of bindings:
-  1. `oneWay` -> `ViewModel` to `View`
-  2. `twoWay` -> `ViewModel` <-> `View`
-  3. `oneWayToSource` -> `View` to `ViewModel`
-
-Next we will support: `oneTime` and `oneWayToSource` (reverse of `oneWay`)
+Currently we support three kinds of bindings:
+  1. `oneWay` -> handle changes from `ViewModel` to `View`
+  2. `twoWay` -> handles changes in both directions between `ViewModel` <-> `View`
+  3. `oneWayToSource` -> handles changes from `View` to `ViewModel`
