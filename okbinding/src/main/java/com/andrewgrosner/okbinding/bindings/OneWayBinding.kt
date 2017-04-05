@@ -2,9 +2,12 @@ package com.andrewgrosner.okbinding.bindings
 
 import android.view.View
 import android.widget.CompoundButton
+import android.widget.DatePicker
 import android.widget.TextView
 import com.andrewgrosner.okbinding.viewextensions.setCheckedIfNecessary
 import com.andrewgrosner.okbinding.viewextensions.setTextIfNecessary
+import com.andrewgrosner.okbinding.viewextensions.setTimeIfNecessary
+import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
 
@@ -71,11 +74,11 @@ infix fun <Input, TBinding : BindingConverter<Input>, TChar : CharSequence?>
         OneWayExpression<Input, TChar, TBinding>.toText(textView: TextView)
         = toView(textView, TextView::setTextIfNecessary)
 
-infix fun <Input, TBinding : ObservableBindingConverter<Input>, TChar : CharSequence?>
-        OneWayExpression<Input, TChar, TBinding>.toTextObs(textView: TextView)
-        = toView(textView, TextView::setTextIfNecessary)
-
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton)
         = toView(compoundButton, CompoundButton::setCheckedIfNecessary)
+
+infix fun <Input, TBinding : ObservableBindingConverter<Input>>
+        OneWayExpression<Input, Calendar, TBinding>.toDatePicker(datePicker: DatePicker)
+        = toView(datePicker, DatePicker::setTimeIfNecessary)
 

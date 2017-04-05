@@ -4,7 +4,12 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.DatePicker.OnDateChangedListener
 import android.widget.TextView
+import java.lang.ref.WeakReference
+import java.util.*
+import java.util.Calendar.*
 
 private typealias Callback<T> = (T) -> Unit
 
@@ -54,6 +59,41 @@ class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>, CompoundB
 
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
         callback?.invoke(isChecked)
+    }
+
+}
+
+class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>,
+        OnDateChangedListener {
+
+    private class WeakOnDateChangedListener(self: OnDateChangedListener) : OnDateChangedListener {
+
+        private val listener = WeakReference(self)
+
+        override fun onDateChanged(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
+            listener.get()?.onDateChanged(view, year, monthOfYear, dayOfMonth)
+        }
+    }
+
+    private val listener = WeakOnDateChangedListener(this)
+
+    private var callback: Callback<Calendar?>? = null
+
+    override fun register(view: DatePicker, callback: Callback<Calendar?>) {
+        this.callback = callback
+        view.init(initialValue[YEAR], initialValue[MONTH], initialValue[DAY_OF_MONTH], listener)
+    }
+
+    override fun deregister(view: DatePicker) {
+        this.callback = null
+    }
+
+    override fun onDateChanged(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
+        val calendar = Calendar.getInstance()
+        calendar[MONTH] = monthOfYear
+        calendar[DAY_OF_MONTH] = dayOfMonth
+        calendar[YEAR] = year
+        callback?.invoke(calendar)
     }
 
 }

@@ -2,7 +2,9 @@ package com.andrewgrosner.okbinding.bindings
 
 import android.view.View
 import android.widget.CompoundButton
+import android.widget.DatePicker
 import android.widget.TextView
+import java.util.*
 
 fun <Input, Output, Converter : BindingConverter<Input>, V : View>
         OneWayBinding<Input, Output, Converter, V>.twoWay() = TwoWayBindingExpression(this)
@@ -96,3 +98,21 @@ fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean
  */
 fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldExprFromCompound(inverseSetter: InverseSetter<Boolean>)
         = toInput(OnCheckedChangeRegister(), inverseSetter)
+
+/**
+ * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
+ * Changes from either the view or the field are synchronized between each instance.
+ */
+fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldFromDate()
+        = toInput(DatePickerRegister(oneWayBinding.convert()), {
+    val observableField = oneWayBinding.oneWayExpression.binding.observableField
+    observableField.value = it ?: observableField.defaultValue
+})
+
+/**
+ * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
+ * Changes from either the view or the field expression are synchronized between each instance.
+ * The [inverseSetter] returns values from the bound view and allows you to mutate values.
+ */
+fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldExprFromDate(inverseSetter: InverseSetter<Calendar>)
+        = toInput(DatePickerRegister(oneWayBinding.convert()), inverseSetter)

@@ -2,6 +2,7 @@ package com.andrewgrosner.okbinding.sample
 
 import com.andrewgrosner.okbinding.BaseObservable
 import com.andrewgrosner.okbinding.observable
+import java.util.*
 
 /**
  * Description:
@@ -12,9 +13,11 @@ class MainActivityViewModel : BaseObservable() {
 
     val lastName = "Grosner"
 
-    val formInput = observable("This should change")
+    val formInput = observable("")
 
     val selected = observable(true)
+
+    val currentTime = observable(Calendar.getInstance())
 
     var normalField = ""
         set(value) {

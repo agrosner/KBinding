@@ -16,7 +16,7 @@ abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
         }
         get() {
             return bindingHolder.viewModel
-        }`
+        }
 
     fun <Input, Output> oneWay(oneWayBinding: OneWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {
         bindingHolder.oneWay(oneWayBinding)
