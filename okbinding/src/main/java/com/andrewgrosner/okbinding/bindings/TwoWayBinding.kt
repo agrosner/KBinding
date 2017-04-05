@@ -74,7 +74,7 @@ fun TwoWayBindingExpression<String, String,
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
         })
-        = toInput(TextViewRegister(), inverseSetter)
+        = toInput(OnTextChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
@@ -99,7 +99,7 @@ fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calen
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
         })
-        = toInput(DatePickerRegister(oneWayBinding.convert()), inverseSetter)
+        = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
 
 /**
  * Immediately binds changes from this [RatingBar] to the specified observable field in a two way binding.
@@ -111,4 +111,4 @@ fun TwoWayBindingExpression<Float, Float, ObservableBindingConverter<Float>, Rat
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
         })
-        = toInput(RatingBarRegister(), inverseSetter)
+        = toInput(OnRatingBarChangedRegister(), inverseSetter)

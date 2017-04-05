@@ -28,7 +28,7 @@ abstract class ViewRegister<in V : View, Output> {
     abstract fun deregister(view: V)
 }
 
-class TextViewRegister : ViewRegister<TextView, String>(), TextWatcher {
+class OnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
 
     override fun register(view: TextView) {
         view.addTextChangedListener(this)
@@ -65,7 +65,7 @@ class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>(), Compoun
 
 }
 
-class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>(),
+class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>(),
         OnDateChangedListener {
 
     private class WeakOnDateChangedListener(self: OnDateChangedListener) : OnDateChangedListener {
@@ -97,7 +97,7 @@ class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<Date
 
 }
 
-class RatingBarRegister : ViewRegister<RatingBar, Float>(), RatingBar.OnRatingBarChangeListener {
+class OnRatingBarChangedRegister : ViewRegister<RatingBar, Float>(), RatingBar.OnRatingBarChangeListener {
 
     override fun register(view: RatingBar) {
         view.onRatingBarChangeListener = this
