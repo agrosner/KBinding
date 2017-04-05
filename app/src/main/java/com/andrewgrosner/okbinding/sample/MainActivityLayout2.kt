@@ -30,7 +30,6 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                             onClick { viewModel.onFirstNameClick() }
                         }.lparams {
-                            leftMargin = dip(8)
                             rightMargin = dip(4)
                         }
 
@@ -41,7 +40,6 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                             onClick { viewModel.onLastNameClick() }
                         }.lparams {
                             leftMargin = dip(4)
-                            rightMargin = dip(8)
                         }
                     }.lparams {
                         width = MATCH_PARENT
@@ -54,13 +52,12 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                                         .twoWay().toFieldFromText())
                     }.lparams {
                         width = MATCH_PARENT
-                        horizontalMargin = dip(8)
                     }
 
 
                     textView {
                         id = R.id.mirrorText
-                        twoWayBindingFor<String>(MainActivityViewModel::formInput).onExpression { text = it }
+                        oneWay(bindSelf(viewModel.formInput).toText(this))
                     }
 
                     switch {
@@ -70,10 +67,7 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                     textView {
                         id = R.id.onOff
-                        twoWayBindingFor(viewModel.selected).onExpression {
-                            val selected = it ?: false
-                            text = if (selected) "On" else "Off"
-                        }
+                        oneWay(bind(viewModel.selected).on { if (it) "On" else "Off" }.toText(this))
                     }
 
                     textView {
@@ -86,9 +80,12 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                         twoWay(bind(viewModel.currentTime).onSelf().toDatePicker(this)
                                 .twoWay().toFieldFromDate())
                     }
+                }.lparams {
+                    horizontalMargin = dip(8)
                 }
             }
         }
     }
 
 }
+

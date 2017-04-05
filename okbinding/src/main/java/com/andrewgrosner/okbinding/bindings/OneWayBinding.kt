@@ -28,6 +28,7 @@ class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
         val expression: BindingExpression<Input, Output>) {
     fun <V : View> toView(view: V, viewExpression: (V, Output) -> Unit)
             = OneWayBinding<Input, Output, Converter, V>(this).toView(view, viewExpression)
+
 }
 
 class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View>(
