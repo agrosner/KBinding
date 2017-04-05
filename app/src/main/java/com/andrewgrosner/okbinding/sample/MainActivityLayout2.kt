@@ -54,7 +54,6 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                         width = MATCH_PARENT
                     }
 
-
                     textView {
                         id = R.id.mirrorText
                         oneWay(bindSelf(viewModel.formInput).toText(this))
@@ -77,7 +76,7 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                     }
 
                     datePicker {
-                        twoWay(bind(viewModel.currentTime).onSelf().toDatePicker(this)
+                        twoWay(bindSelf(viewModel.currentTime).toDatePicker(this)
                                 .twoWay().toFieldFromDate())
                     }
                 }.lparams {

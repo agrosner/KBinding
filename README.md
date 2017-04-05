@@ -18,6 +18,7 @@ holder.oneWay(ViewModel::name,
 // two way binding on observable that synchronizes text and value changes.
 holder.twoWay(bindSelf(viewModel.name)
   .toText(textView)
+  .twoWay()
   .toFieldFromText())
 
 // two way binding that synchronizes compoundbutton / checkbox changes

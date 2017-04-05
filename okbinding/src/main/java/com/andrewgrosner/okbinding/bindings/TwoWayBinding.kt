@@ -36,6 +36,9 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
         inverseSetters += inverseSetter
     }
 
+    /**
+     * Appends another expression that gets called with the value of the view whenever the view itself changes.
+     */
     fun onExpression(inverseSetter: InverseSetter<Output>) = apply {
         inverseSetters += inverseSetter
     }
@@ -100,7 +103,7 @@ fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean
         = toInput(OnCheckedChangeRegister(), inverseSetter)
 
 /**
- * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
+ * Immediately binds changes from this [DatePicker] to the specified observable field in a two way binding.
  * Changes from either the view or the field are synchronized between each instance.
  */
 fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldFromDate()
@@ -110,7 +113,7 @@ fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calen
 })
 
 /**
- * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
+ * Immediately binds changes from this [DatePicker] to the specified observable field in a two way binding.
  * Changes from either the view or the field expression are synchronized between each instance.
  * The [inverseSetter] returns values from the bound view and allows you to mutate values.
  */

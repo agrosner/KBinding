@@ -24,6 +24,10 @@ infix fun <Input, Output, TBinding : BindingConverter<Input>> TBinding.on(expres
 
 fun <Input, TBinding : BindingConverter<Input>> TBinding.onSelf() = OneWayExpression(this, { it })
 
+fun <Input, TBinding : BindingConverter<Input>> TBinding.onIsNull() = OneWayExpression(this, { it == null })
+
+fun <TBinding : BindingConverter<String>> TBinding.onIsNullOrEmpty() = OneWayExpression(this, String::isNullOrEmpty)
+
 class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
         val binding: Converter,
         val expression: BindingExpression<Input, Output>) {
@@ -74,6 +78,14 @@ class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Int, TBinding>.toViewVisibility(textView: View)
         = toView(textView, View::setVisibilityIfNeeded)
+
+/**
+ * Immediately binds the [View] to the value of this binding. Toggles visibility based on [Boolean] returned
+ * in previous expressions. If true, [View.VISIBLE] is used, otherwise it's set to [View.GONE]
+ */
+infix fun <Input, TBinding : BindingConverter<Input>>
+        OneWayExpression<Input, Boolean, TBinding>.toViewVisibilityB(textView: View)
+        = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value) View.VISIBLE else View.GONE) })
 
 /**
  * Immediately binds the [TextView] to the value of this binding. Subsequent changes are handled by
