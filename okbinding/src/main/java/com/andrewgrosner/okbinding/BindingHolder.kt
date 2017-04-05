@@ -84,7 +84,7 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    fun destroyView() {
+    fun unbind() {
         val viewModel = viewModel
         if (viewModel is Observable) {
             viewModel.removeOnPropertyChangedCallback(onViewModelChanged)

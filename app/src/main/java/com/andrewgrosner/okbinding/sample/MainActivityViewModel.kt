@@ -11,7 +11,7 @@ class MainActivityViewModel : BaseObservable() {
 
     val firstName = "Andrew"
 
-    val lastName = "Grosner"
+    val lastName: String by observable("Grosner") { _, property -> notifyChange(property) }
 
     val formInput = observable("")
 

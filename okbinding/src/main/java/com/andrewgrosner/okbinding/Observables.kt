@@ -3,6 +3,9 @@ package com.andrewgrosner.okbinding
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
+
+typealias PropertyChangedCallback = (Observable, KProperty<*>?) -> Unit
+
 /**
  * Observable classes provide a way in which data bound UI can be notified of changes.
  * [ObservableList] and [ObservableMap] also provide the ability to notify when
@@ -27,13 +30,13 @@ interface Observable {
      * Adds a callback to listen for changes to the Observable.
      * @param callback The callback to start listening.
      */
-    fun addOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit)
+    fun addOnPropertyChangedCallback(callback: PropertyChangedCallback)
 
     /**
      * Removes a callback from those listening for changes.
      * @param callback The callback that should stop listening.
      */
-    fun removeOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit)
+    fun removeOnPropertyChangedCallback(callback: PropertyChangedCallback)
 
 }
 
@@ -41,7 +44,7 @@ open class BaseObservable : Observable {
     @Transient private var mCallbacks: PropertyChangeRegistry? = null
 
     @Synchronized
-    override fun addOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit) {
+    override fun addOnPropertyChangedCallback(callback: PropertyChangedCallback) {
         if (mCallbacks == null) {
             mCallbacks = PropertyChangeRegistry()
         }
@@ -49,7 +52,7 @@ open class BaseObservable : Observable {
     }
 
     @Synchronized
-    override fun removeOnPropertyChangedCallback(callback: (Observable, KProperty<*>?) -> Unit) {
+    override fun removeOnPropertyChangedCallback(callback: PropertyChangedCallback) {
         mCallbacks?.remove(callback)
     }
 
@@ -64,24 +67,37 @@ open class BaseObservable : Observable {
 }
 
 
-class ObservableField<T>(private var _value: T) : BaseObservable(), ReadWriteProperty<Any?, T> {
+class ObservableField<T>(private var _value: T, private val configureClosure: PropertyChangedCallback? = null)
+    : BaseObservable(), ReadWriteProperty<Any?, T> {
 
     val defaultValue = _value
 
+    private var configured = false
+
     var value = _value
         set(value) {
+            checkConfigured()
             field = value
             notifyChange()
         }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
+        checkConfigured()
         return _value
     }
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        checkConfigured()
         if (value != this.value) {
             this.value = value
             if (thisRef is BaseObservable) thisRef.notifyChange(property)
+        }
+    }
+
+    private fun checkConfigured() {
+        if (!configured && configureClosure != null) {
+            configured = true
+            addOnPropertyChangedCallback(configureClosure)
         }
     }
 }
@@ -89,5 +105,6 @@ class ObservableField<T>(private var _value: T) : BaseObservable(), ReadWritePro
 /**
  * Creates new instance of the [Observable] field.
  */
-fun <T> observable(initialValue: T) = ObservableField(initialValue)
+fun <T> observable(initialValue: T, change: PropertyChangedCallback? = null)
+        = ObservableField(initialValue, change)
 

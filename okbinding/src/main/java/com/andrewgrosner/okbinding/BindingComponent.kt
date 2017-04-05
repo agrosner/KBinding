@@ -40,5 +40,5 @@ abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
     @Suppress("UNCHECKED_CAST")
     fun <Output> twoWayBindingFor(observableField: ObservableField<Output>) = bindingHolder.twoWayBindingFor(observableField)
 
-    fun destroyView() = bindingHolder.destroyView()
+    fun destroyView() = bindingHolder.unbind()
 }

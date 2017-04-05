@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.andrewgrosner.okbinding.viewextensions.setCheckedIfNecessary
 import com.andrewgrosner.okbinding.viewextensions.setTextIfNecessary
 import com.andrewgrosner.okbinding.viewextensions.setTimeIfNecessary
+import com.andrewgrosner.okbinding.viewextensions.setVisibilityIfNeeded
 import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
@@ -66,6 +67,13 @@ class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
 
 }
 
+/**
+ * Immediately binds the [View] to the value of this binding. Toggles visibility based on [Int] returned
+ * in previous expressions.
+ */
+infix fun <Input, TBinding : BindingConverter<Input>>
+        OneWayExpression<Input, Int, TBinding>.toViewVisibility(textView: View)
+        = toView(textView, View::setVisibilityIfNeeded)
 
 /**
  * Immediately binds the [TextView] to the value of this binding. Subsequent changes are handled by

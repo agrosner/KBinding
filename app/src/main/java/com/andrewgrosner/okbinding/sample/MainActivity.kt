@@ -8,10 +8,12 @@ import org.jetbrains.anko.setContentView
 
 class MainActivity : AppCompatActivity() {
 
+    var layout: MainActivityLayout2? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val viewModel = MainActivityViewModel()
-        MainActivityLayout2(viewModel).setContentView(this)
+        layout = MainActivityLayout2(viewModel).apply { setContentView(this@MainActivity) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -32,5 +34,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        layout?.destroyView()
     }
 }
