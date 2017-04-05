@@ -70,16 +70,13 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                     switch {
                         twoWay(bindSelf(viewModel.selected).toOnCheckedChange(this)
-                                .twoWay().toFieldFromCompound())
+                                .twoWay().toFieldFromCompound().onExpression {
+                            text = if (it ?: false) "On" else "Off"
+                        })
                     }
 
                     textView {
-                        id = R.id.onOff
-                        oneWay(bind(viewModel.selected).on { if (it) "On" else "Off" }.toText(this))
-                    }
-
-                    textView {
-                        oneWay(bindSelf(viewModel.currentTime).toView(this) { view, value ->
+                        oneWay(bindSelf(viewModel.currentTime).toView(this) { _, value ->
                             text = "Current Date is ${value.get(MONTH)}/${value.get(DAY_OF_MONTH)}/${value.get(YEAR)}"
                         })
                     }

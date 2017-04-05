@@ -41,19 +41,19 @@ class OneWayToSource<Input, Output, V : View>(
         val propertySetter: (Input?, V) -> Unit,
         val bindingExpression: BindingExpression<Output?, Input?> = expression.bindingExpression,
         val view: V = expression.viewBinder.view,
-        val viewRegister: ViewRegister<V, Output> = expression.viewBinder.viewRegister) {
+        val viewRegister: ViewRegister<V, Output> = expression.viewBinder.viewRegister) : Binding {
 
-    init {
-        bind()
-    }
-
-    fun bind() {
+    override fun bind() {
         viewRegister.register(view, { propertySetter(bindingExpression(it), view) })
+        notifyValueChange()
     }
 
-    fun unbind() {
+    override fun unbind() {
         viewRegister.deregister(view)
     }
 
+    override fun notifyValueChange() {
+        propertySetter(bindingExpression(viewRegister.getValue(view)), view)
+    }
 }
 

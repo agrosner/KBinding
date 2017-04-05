@@ -26,6 +26,8 @@ abstract class ViewRegister<in V : View, Output> {
     abstract fun register(view: V)
 
     abstract fun deregister(view: V)
+
+    abstract fun getValue(view: V): Output
 }
 
 class OnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
@@ -47,6 +49,8 @@ class OnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
         @Suppress("UNCHECKED_CAST")
         callback?.invoke(s?.toString())
     }
+
+    override fun getValue(view: TextView) = view.text.toString()
 }
 
 class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>(), CompoundButton.OnCheckedChangeListener {
@@ -63,6 +67,7 @@ class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>(), Compoun
         callback?.invoke(isChecked)
     }
 
+    override fun getValue(view: CompoundButton) = view.isChecked
 }
 
 class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>(),
@@ -87,6 +92,12 @@ class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<D
         this.callback = null
     }
 
+    override fun getValue(view: DatePicker) = getInstance().apply {
+        set(MONTH, view.month)
+        set(DAY_OF_MONTH, view.dayOfMonth)
+        set(YEAR, view.year)
+    }!!
+
     override fun onDateChanged(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
         val calendar = Calendar.getInstance()
         calendar[MONTH] = monthOfYear
@@ -106,6 +117,8 @@ class OnRatingBarChangedRegister : ViewRegister<RatingBar, Float>(), RatingBar.O
     override fun deregister(view: RatingBar) {
         view.onRatingBarChangeListener = null
     }
+
+    override fun getValue(view: RatingBar) = view.rating
 
     override fun onRatingChanged(ratingBar: RatingBar?, rating: Float, fromUser: Boolean) {
         callback?.invoke(rating)

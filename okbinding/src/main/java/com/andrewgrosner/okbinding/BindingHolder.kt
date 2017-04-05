@@ -38,6 +38,7 @@ class BindingHolder<V>(viewModel: V) {
 
     fun <Input, Output> oneWay(oneWayBinding: OneWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {
         bindings += oneWayBinding
+        oneWayBinding.bind()
     }
 
     fun <Input, Output> oneWay(kProperty: KProperty<*>, oneWayBinding: OneWayBinding<Input, Output, *, *>) {
@@ -47,6 +48,7 @@ class BindingHolder<V>(viewModel: V) {
             propertyBindings[kProperty] = mutableList
         }
         mutableList.add(oneWayBinding)
+        oneWayBinding.bind()
     }
 
     fun <Input, Output, V : View> oneWayToSource(oneWayToSource: OneWayToSource<Input, Output, V>) {
@@ -57,6 +59,7 @@ class BindingHolder<V>(viewModel: V) {
             sourceBindings[view] = mutableList
         }
         mutableList.add(oneWayToSource)
+        oneWayToSource.bind()
     }
 
     fun <Input, Output> twoWay(twoWayBinding: TwoWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {
@@ -65,14 +68,16 @@ class BindingHolder<V>(viewModel: V) {
             throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
         }
         twoWayBindings[observableField] = twoWayBinding
+        twoWayBinding.bind()
     }
 
-    fun <Input, Output> twoWay(kProperty: KProperty<*>, oneWayBinding: TwoWayBinding<Input, Output, *, *>) {
+    fun <Input, Output> twoWay(kProperty: KProperty<*>, twoWayBinding: TwoWayBinding<Input, Output, *, *>) {
         val key = kProperty
         if (twoWayPropertyBindings.containsKey(key)) {
             throw IllegalStateException("Cannot register more than one two way binding to property updates. This could result in a view update cycle.")
         }
-        twoWayPropertyBindings[key] = oneWayBinding
+        twoWayPropertyBindings[key] = twoWayBinding
+        twoWayBinding.bind()
     }
 
     @Suppress("UNCHECKED_CAST")

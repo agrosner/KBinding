@@ -26,22 +26,22 @@ private typealias InverseSetter<T> = (T?) -> Unit
 class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View>(
         val twoWayBindingExpression: TwoWayBindingExpression<Input, Output, Converter, V>,
         val viewRegister: ViewRegister<V, Output>,
-        inverseSetter: InverseSetter<Output>,
+        val inverseSetter: InverseSetter<Output>,
         val oneWayBinding: OneWayBinding<Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
     : Binding {
 
-    private val inverseSetters = mutableSetOf<InverseSetter<Output>>()
-
-    init {
-        viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
-        inverseSetters += inverseSetter
-    }
+    private val inverseSetters = mutableSetOf(inverseSetter)
 
     /**
      * Appends another expression that gets called with the value of the view whenever the view itself changes.
      */
     fun onExpression(inverseSetter: InverseSetter<Output>) = apply {
         inverseSetters += inverseSetter
+    }
+
+    override fun bind() {
+        viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
+        oneWayBinding.notifyValueChange() // trigger value change on bind to respect value of ViewModel over view.
     }
 
     override fun unbind() {
@@ -61,6 +61,13 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
      */
     fun notifyViewChanged(value: Output?) {
         inverseSetters.forEach { it.invoke(value) }
+    }
+
+    /**
+     * Notifies change manually from the current value of the field bound to it.
+     */
+    fun notifyViewChanged() {
+        notifyViewChanged(oneWayBinding.convert())
     }
 }
 

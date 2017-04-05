@@ -16,6 +16,8 @@ interface Binding {
 
     fun notifyValueChange()
 
+    fun bind()
+
     fun unbind()
 }
 
@@ -49,6 +51,9 @@ class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
     fun toView(view: V, viewExpression: ((V, Output) -> Unit)) = apply {
         this.viewExpression = viewExpression
         this.view = view
+    }
+
+    override fun bind() {
         notifyValueChange()
         converter.bind(this)
     }
