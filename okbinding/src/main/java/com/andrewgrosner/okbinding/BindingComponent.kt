@@ -1,18 +1,16 @@
 package com.andrewgrosner.okbinding
 
-import com.andrewgrosner.okbinding.bindings.BindingOn
-import com.andrewgrosner.okbinding.bindings.ObservableBinding
+import com.andrewgrosner.okbinding.bindings.Binding
+import com.andrewgrosner.okbinding.bindings.ObservableBindingConverter
+import com.andrewgrosner.okbinding.bindings.OneWayBinding
+import com.andrewgrosner.okbinding.bindings.TwoWayBinding
 import org.jetbrains.anko.AnkoComponent
 import kotlin.reflect.KProperty
 
-/**
- * Description:
- */
-abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
+abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
 
-
-    private val bindings = mutableListOf<BindingOn<*, *, *>>()
-    private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<BindingOn<*, *, *>>>()
+    private val bindings = mutableListOf<Binding<*, *, *>>()
+    private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<Binding<*, *, *>>>()
 
     val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
@@ -32,17 +30,30 @@ abstract class ViewModelComponent<T, V>(viewModel: V) : AnkoComponent<T> {
             }
         }
 
-    fun <Input, Output> oneWay(bindingOn: BindingOn<Input, Output, ObservableBinding<Input>>) {
-        bindings += bindingOn
+    fun <Input, Output> oneWay(oneWayBinding: OneWayBinding<Input, Output, ObservableBindingConverter<Input>>) {
+        bindings += oneWayBinding
     }
 
-    fun <Input, Output> oneWay(kProperty: KProperty<*>, bindingOn: BindingOn<Input, Output, *>) {
+    fun <Input, Output> oneWay(kProperty: KProperty<*>, oneWayBinding: OneWayBinding<Input, Output, *>) {
+        bindPropertyBinding(kProperty, oneWayBinding)
+    }
+
+    fun <Input, Output> twoWay(twoWayBinding: TwoWayBinding<Input, Output, ObservableBindingConverter<Input>>) {
+        bindings += twoWayBinding
+    }
+
+    fun <Input, Output> twoWay(kProperty: KProperty<*>, oneWayBinding: TwoWayBinding<Input, Output, *>) {
+        bindPropertyBinding(kProperty, oneWayBinding)
+    }
+
+    private fun <Input, Output> bindPropertyBinding(kProperty: KProperty<*>,
+                                                    oneWayBinding: Binding<Input, Output, *>) {
         var mutableList = propertyBindings[kProperty]
         if (mutableList == null) {
             mutableList = mutableListOf()
             propertyBindings[kProperty] = mutableList
         }
-        mutableList.add(bindingOn)
+        mutableList.add(oneWayBinding)
     }
 
     private fun onFieldChanged(property: KProperty<*>?) {

@@ -1,10 +1,10 @@
-package com.andrewgrosner.okbinding
+package com.andrewgrosner.okbinding.viewextensions
 
 import android.text.Spanned
 import android.widget.TextView
 
-fun setText(view: TextView, text: CharSequence?) {
-    val oldText = view.text
+fun TextView.setTextIfNecessary(text: CharSequence?) {
+    val oldText = this.text
     if (text === oldText || text == null && oldText.isEmpty()) {
         return
     }
@@ -15,7 +15,7 @@ fun setText(view: TextView, text: CharSequence?) {
     } else if (!haveContentsChanged(text, oldText)) {
         return  // No content changes, so don't set anything.
     }
-    view.text = text
+    this.text = text
 }
 
 fun haveContentsChanged(str1: CharSequence?, str2: CharSequence?): Boolean {
@@ -28,5 +28,5 @@ fun haveContentsChanged(str1: CharSequence?, str2: CharSequence?): Boolean {
     if (length != str2?.length) {
         return true
     }
-    return (0..length - 1).any { str2 != null && str1[it] != str2[it] }
+    return (0..length - 1).any { str1[it] != str2[it] }
 }
