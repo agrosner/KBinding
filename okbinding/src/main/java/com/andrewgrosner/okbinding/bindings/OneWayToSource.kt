@@ -30,11 +30,11 @@ class OneWayToSourceExpression<Input, Output, V : View>(
         val viewBinder: ViewBinder<V, Output>,
         val bindingExpression: BindingExpression<Output?, Input?>) {
 
-    fun toProperty(propertySetter: (Input?, V) -> Unit) = OneWayToSource(this, propertySetter)
+    fun to(propertySetter: (Input?, V) -> Unit) = OneWayToSource(this, propertySetter)
 }
 
-fun <Input, Output, V : View> OneWayToSourceExpression<Input, Output, V>.toObservable(observableField: ObservableField<Input>)
-        = toProperty { input, _ -> observableField.value = input ?: observableField.defaultValue }
+fun <Input, Output, V : View> OneWayToSourceExpression<Input, Output, V>.to(observableField: ObservableField<Input>)
+        = to { input, _ -> observableField.value = input ?: observableField.defaultValue }
 
 class OneWayToSource<Input, Output, V : View>(
         val expression: OneWayToSourceExpression<Input, Output, V>,

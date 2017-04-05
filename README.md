@@ -27,6 +27,15 @@ holder.twoWay(bindSelf(viewModel.selected)
         .twoWay()
         .toFieldFromCompound())
 
+// binds input changes from the view to the name property.
+holder.oneWayToSource(bind(textView)
+    .onSelf()
+    .to(viewModel.name))
+
+// binds input changes from the view to the name property (non observable).
+holder.oneWayToSource(bind(textView)
+    .onSelf()
+    .to { input, view -> viewModel.name = input})
 
 ```
 
@@ -141,5 +150,6 @@ override fun onDestroy() {
 Currently we support two kinds of bindings:
   1. `oneWay` -> `ViewModel` to `View`
   2. `twoWay` -> `ViewModel` <-> `View`
+  3. `oneWayToSource` -> `View` to `ViewModel`
 
 Next we will support: `oneTime` and `oneWayToSource` (reverse of `oneWay`)

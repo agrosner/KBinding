@@ -61,7 +61,7 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                     editText {
                         hint = "Text mirrors below (One way to source)"
                         oneWayToSource(bind(this).onSelf()
-                                .toObservable(viewModel.oneWaySourceInput))
+                                .to(viewModel.oneWaySourceInput))
                     }
 
                     textView {
