@@ -12,7 +12,7 @@ class MainActivityViewModel : BaseObservable() {
 
     val lastName = "Grosner"
 
-    val formInput: String by observable("This should change")
+    val formInput = observable("This should change")
 
     val selected = observable(true)
 

@@ -1,11 +1,9 @@
 package com.andrewgrosner.okbinding.sample
 
 import android.view.View
+import android.widget.TextView
 import com.andrewgrosner.okbinding.BindingComponent
-import com.andrewgrosner.okbinding.bindings.bindSelf
-import com.andrewgrosner.okbinding.bindings.toOnCheckedChange
-import com.andrewgrosner.okbinding.bindings.toText
-import com.andrewgrosner.okbinding.bindings.twoWay
+import com.andrewgrosner.okbinding.bindings.*
 import org.jetbrains.anko.*
 
 /**
@@ -38,16 +36,21 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                 editText {
                     twoWay(MainActivityViewModel::formInput,
-                            bindSelf { viewModel.formInput }.toText(this)
-                                    .twoWay().toText(this))
+                            bindSelf(viewModel.formInput).toTextObs(this)
+                                    .twoWay().toFieldFromText()
+                                    .onExpression {
+                                        val mirrorText = find<TextView>(R.id.mirrorText)
+                                        mirrorText.text = it
+                                    })
                 }
 
                 switch {
-                    oneWay(bindSelf(viewModel.selected).toOnCheckedChange(this))
+                    twoWay(bindSelf(viewModel.selected).toOnCheckedChange(this)
+                            .twoWay().toFieldFromCompound())
                 }
 
                 textView {
-
+                    id = R.id.mirrorText
                 }
 
                 textView {

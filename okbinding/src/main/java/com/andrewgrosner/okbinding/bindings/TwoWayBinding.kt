@@ -3,25 +3,44 @@ package com.andrewgrosner.okbinding.bindings
 import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
-import com.andrewgrosner.okbinding.ObservableField
 
 fun <Input, Output, Converter : BindingConverter<Input>, V : View>
-        OneWayBinding<Input, Output, Converter, V>.twoWay() = TwoWayBinding(this)
+        OneWayBinding<Input, Output, Converter, V>.twoWay() = TwoWayBindingExpression(this)
 
+class TwoWayBindingExpression<Input, Output, Converter : BindingConverter<Input>, V : View>(
+        val oneWayBinding: OneWayBinding<Input, Output, Converter, V>) {
+    fun toInput(
+            viewRegister: ViewRegister<V, Output>,
+            inverseSetter: (InverseSetter<Output>)) = TwoWayBinding(this, viewRegister, inverseSetter)
+}
+
+
+private typealias InverseSetter<T> = (T?) -> Unit
+
+/**
+ * Reverses the binding on a field to [View] and provides also [View] to Field support.
+ */
 class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View>(
-        val oneWayBinding: OneWayBinding<Input, Output, Converter, V>) : Binding<Input, Output, Converter> {
+        val twoWayBindingExpression: TwoWayBindingExpression<Input, Output, Converter, V>,
+        val viewRegister: ViewRegister<V, Output>,
+        inverseSetter: InverseSetter<Output>,
+        val oneWayBinding: OneWayBinding<Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
+    : Binding<Input, Output, Converter> {
 
-    var inverseExpression: ((V) -> Output)? = null
-    var inverseSetter: ((Output, Input) -> Unit)? = null
+    private val inverseSetters = mutableSetOf<InverseSetter<Output>>()
 
-    fun toInput(inverseExpression: (V) -> Output,
-                inverseSetter: ((Output, Input) -> Unit)) {
-        this.inverseExpression = inverseExpression
-        this.inverseSetter = inverseSetter
+    init {
+        viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
+        inverseSetters += inverseSetter
+    }
+
+    fun onExpression(inverseSetter: InverseSetter<Output>) = apply {
+        inverseSetters += inverseSetter
     }
 
     override fun unbind() {
         oneWayBinding.unbind()
+        viewRegister.deregister(oneWayBinding.view!!)
     }
 
     /**
@@ -34,32 +53,46 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
     /**
      * When view changes, call our binding expression again.
      */
-    fun notifyViewChanged() {
-        inverseExpression?.let {
-            val view = this.oneWayBinding.view
-            if (view != null) {
-                it(view)
-            }
-        }
+    fun notifyViewChanged(value: Output?) {
+        inverseSetters.forEach { it.invoke(value) }
     }
 }
+
+/**
+ * Immediately binds changes from this [TextView] to the specified observable field in a two way binding.
+ * Changes from either the view or the field are synchronized between each instance.
+ */
+fun TwoWayBindingExpression<String, String,
+        ObservableBindingConverter<String>, TextView>.toFieldFromText()
+        = toInput(TextViewRegister(), {
+    val observableField = oneWayBinding.oneWayExpression.binding.observableField
+    observableField.value = it ?: observableField.defaultValue
+})
+
+/**
+ * Immediately binds changes from this [TextView] to the specified observable field in a two way binding.
+ * Changes from either the view or the field expression are synchronized between each instance.
+ * The [inverseSetter] returns values from the bound view and allows you to mutate values.
+ */
+fun TwoWayBindingExpression<String, String,
+        ObservableBindingConverter<String>, TextView>.toFieldExprFromText(inverseSetter: InverseSetter<String?>)
+        = toInput(TextViewRegister(), inverseSetter)
 
 
 /**
- * Immediately binds the [TextView] to the value of this binding. Subsequent changes are handled by
- * the kind of object it is.
+ * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
+ * Changes from either the view or the field are synchronized between each instance.
  */
-fun <TBinding : BindingConverter<ObservableField<CharSequence>>>
-        TwoWayBinding<ObservableField<CharSequence>, CharSequence, TBinding>.toField() = apply {
-    val view = oneWayBinding.view
-    if (view is TextView) {
-        view.textChangedListener { notifyViewChanged() }
-    }
-    toInput<TextView>({ view.text }, { output, input -> input.value = input })
-}
+fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldFromCompound()
+        = toInput(OnCheckedChangeRegister(), {
+    val observableField = oneWayBinding.oneWayExpression.binding.observableField
+    observableField.value = it ?: observableField.defaultValue
+})
 
-infix fun <Input, TBinding : BindingConverter<Input>>
-        TwoWayBinding<Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton) = apply {
-
-}
-
+/**
+ * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
+ * Changes from either the view or the field expression are synchronized between each instance.
+ * The [inverseSetter] returns values from the bound view and allows you to mutate values.
+ */
+fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldExprFromCompound(inverseSetter: InverseSetter<Boolean>)
+        = toInput(OnCheckedChangeRegister(), inverseSetter)

@@ -20,13 +20,12 @@ infix fun <Input, Output, TBinding : BindingConverter<Input>> TBinding.on(expres
 
 fun <Input, TBinding : BindingConverter<Input>> TBinding.onSelf() = OneWayExpression(this, { it })
 
-fun <Input, Output, Converter : BindingConverter<Input>, V : View>
-        OneWayExpression<Input, Output, Converter>.toView(view: V, viewExpression: (V, Output) -> Unit)
-        = OneWayBinding<Input, Output, Converter, V>(this).toView(view, viewExpression)
-
-class OneWayExpression<Input, out Output, out Converter : BindingConverter<Input>>(
+class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
         val binding: Converter,
-        val expression: BindingExpression<Input, Output>)
+        val expression: BindingExpression<Input, Output>) {
+    fun <V : View> toView(view: V, viewExpression: (V, Output) -> Unit)
+            = OneWayBinding<Input, Output, Converter, V>(this).toView(view, viewExpression)
+}
 
 class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View>(
         val oneWayExpression: OneWayExpression<Input, Output, Converter>,
@@ -68,13 +67,15 @@ class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
  * Immediately binds the [TextView] to the value of this binding. Subsequent changes are handled by
  * the kind of object it is.
  */
-infix fun <Input, TBinding : BindingConverter<Input>, TChar : CharSequence, TV : TextView>
-        OneWayExpression<Input, TChar, TBinding>.toText(textView: TextView) = apply {
-    toView(textView, TextView::setTextIfNecessary)
-}
+infix fun <Input, TBinding : BindingConverter<Input>, TChar : CharSequence?>
+        OneWayExpression<Input, TChar, TBinding>.toText(textView: TextView)
+        = toView(textView, TextView::setTextIfNecessary)
+
+infix fun <Input, TBinding : ObservableBindingConverter<Input>, TChar : CharSequence?>
+        OneWayExpression<Input, TChar, TBinding>.toTextObs(textView: TextView)
+        = toView(textView, TextView::setTextIfNecessary)
 
 infix fun <Input, TBinding : BindingConverter<Input>>
-        OneWayExpression<Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton) = apply {
-    toView(compoundButton, CompoundButton::setCheckedIfNecessary)
-}
+        OneWayExpression<Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton)
+        = toView(compoundButton, CompoundButton::setCheckedIfNecessary)
 

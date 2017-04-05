@@ -66,6 +66,8 @@ open class BaseObservable : Observable {
 
 class ObservableField<T>(private var _value: T) : BaseObservable(), ReadWriteProperty<Any?, T> {
 
+    val defaultValue = _value
+
     var value = _value
         set(value) {
             field = value
