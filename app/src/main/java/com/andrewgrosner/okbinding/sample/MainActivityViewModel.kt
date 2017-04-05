@@ -15,6 +15,8 @@ class MainActivityViewModel : BaseObservable() {
 
     val formInput = observable("")
 
+    val oneWaySourceInput = observable("")
+
     val selected = observable(true)
 
     val currentTime = observable(Calendar.getInstance())

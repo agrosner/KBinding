@@ -1,7 +1,9 @@
 package com.andrewgrosner.okbinding
 
+import android.view.View
 import com.andrewgrosner.okbinding.bindings.ObservableBindingConverter
 import com.andrewgrosner.okbinding.bindings.OneWayBinding
+import com.andrewgrosner.okbinding.bindings.OneWayToSource
 import com.andrewgrosner.okbinding.bindings.TwoWayBinding
 import org.jetbrains.anko.AnkoComponent
 import kotlin.reflect.KProperty
@@ -24,6 +26,10 @@ abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
 
     fun <Input, Output> oneWay(kProperty: KProperty<*>, oneWayBinding: OneWayBinding<Input, Output, *, *>) {
         bindingHolder.oneWay(kProperty, oneWayBinding)
+    }
+
+    fun <Input, Output, V : View> oneWayToSource(oneWayBinding: OneWayToSource<Input, Output, V>) {
+        bindingHolder.oneWayToSource(oneWayBinding)
     }
 
     fun <Input, Output> twoWay(twoWayBinding: TwoWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {

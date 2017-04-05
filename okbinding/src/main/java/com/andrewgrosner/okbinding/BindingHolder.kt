@@ -1,9 +1,7 @@
 package com.andrewgrosner.okbinding
 
-import com.andrewgrosner.okbinding.bindings.Binding
-import com.andrewgrosner.okbinding.bindings.ObservableBindingConverter
-import com.andrewgrosner.okbinding.bindings.OneWayBinding
-import com.andrewgrosner.okbinding.bindings.TwoWayBinding
+import android.view.View
+import com.andrewgrosner.okbinding.bindings.*
 import kotlin.reflect.KProperty
 
 /**
@@ -17,6 +15,8 @@ class BindingHolder<V>(viewModel: V) {
 
     private val twoWayBindings = mutableMapOf<ObservableField<*>, TwoWayBinding<*, *, *, *>>()
     private val twoWayPropertyBindings = mutableMapOf<KProperty<*>, TwoWayBinding<*, *, *, *>>()
+
+    private val sourceBindings = mutableMapOf<View, MutableList<OneWayToSource<*, *, *>>>()
 
     val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
@@ -49,8 +49,18 @@ class BindingHolder<V>(viewModel: V) {
         mutableList.add(oneWayBinding)
     }
 
+    fun <Input, Output, V : View> oneWayToSource(oneWayToSource: OneWayToSource<Input, Output, V>) {
+        val view = oneWayToSource.view
+        var mutableList = sourceBindings[view]
+        if (mutableList == null) {
+            mutableList = mutableListOf()
+            sourceBindings[view] = mutableList
+        }
+        mutableList.add(oneWayToSource)
+    }
+
     fun <Input, Output> twoWay(twoWayBinding: TwoWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {
-        val observableField = twoWayBinding.oneWayBinding.binding.observableField
+        val observableField = twoWayBinding.oneWayBinding.converter.observableField
         if (twoWayBindings.containsKey(observableField)) {
             throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
         }
@@ -92,7 +102,9 @@ class BindingHolder<V>(viewModel: V) {
         bindings.forEach { it.unbind() }
         bindings.clear()
 
-        propertyBindings.forEach { _, bindings -> bindings.forEach { it.unbind() } }
+        sourceBindings.values.forEach { bindings -> bindings.forEach { it.unbind() } }
+
+        propertyBindings.values.forEach { bindings -> bindings.forEach { it.unbind() } }
         propertyBindings.clear()
 
         twoWayBindings.values.forEach { it.unbind() }

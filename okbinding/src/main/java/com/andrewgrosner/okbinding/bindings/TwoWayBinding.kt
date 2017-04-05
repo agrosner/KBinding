@@ -3,6 +3,7 @@ package com.andrewgrosner.okbinding.bindings
 import android.view.View
 import android.widget.CompoundButton
 import android.widget.DatePicker
+import android.widget.RatingBar
 import android.widget.TextView
 import java.util.*
 
@@ -27,7 +28,7 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
         val viewRegister: ViewRegister<V, Output>,
         inverseSetter: InverseSetter<Output>,
         val oneWayBinding: OneWayBinding<Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
-    : Binding<Input, Output, Converter> {
+    : Binding {
 
     private val inverseSetters = mutableSetOf<InverseSetter<Output>>()
 
@@ -68,54 +69,46 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
  * Changes from either the view or the field are synchronized between each instance.
  */
 fun TwoWayBindingExpression<String, String,
-        ObservableBindingConverter<String>, TextView>.toFieldFromText()
-        = toInput(TextViewRegister(), {
-    val observableField = oneWayBinding.oneWayExpression.binding.observableField
-    observableField.value = it ?: observableField.defaultValue
-})
-
-/**
- * Immediately binds changes from this [TextView] to the specified observable field in a two way binding.
- * Changes from either the view or the field expression are synchronized between each instance.
- * The [inverseSetter] returns values from the bound view and allows you to mutate values.
- */
-fun TwoWayBindingExpression<String, String,
-        ObservableBindingConverter<String>, TextView>.toFieldExprFromText(inverseSetter: InverseSetter<String?>)
+        ObservableBindingConverter<String>, TextView>.toFieldFromText(
+        inverseSetter: InverseSetter<String?> = {
+            val observableField = oneWayBinding.oneWayExpression.converter.observableField
+            observableField.value = it ?: observableField.defaultValue
+        })
         = toInput(TextViewRegister(), inverseSetter)
 
-
-/**
- * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
- * Changes from either the view or the field are synchronized between each instance.
- */
-fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldFromCompound()
-        = toInput(OnCheckedChangeRegister(), {
-    val observableField = oneWayBinding.oneWayExpression.binding.observableField
-    observableField.value = it ?: observableField.defaultValue
-})
-
 /**
  * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
  * Changes from either the view or the field expression are synchronized between each instance.
  * The [inverseSetter] returns values from the bound view and allows you to mutate values.
  */
-fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldExprFromCompound(inverseSetter: InverseSetter<Boolean>)
+fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldFromCompound(
+        inverseSetter: InverseSetter<Boolean> = {
+            val observableField = oneWayBinding.oneWayExpression.converter.observableField
+            observableField.value = it ?: observableField.defaultValue
+        })
         = toInput(OnCheckedChangeRegister(), inverseSetter)
 
-/**
- * Immediately binds changes from this [DatePicker] to the specified observable field in a two way binding.
- * Changes from either the view or the field are synchronized between each instance.
- */
-fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldFromDate()
-        = toInput(DatePickerRegister(oneWayBinding.convert()), {
-    val observableField = oneWayBinding.oneWayExpression.binding.observableField
-    observableField.value = it ?: observableField.defaultValue
-})
 
 /**
  * Immediately binds changes from this [DatePicker] to the specified observable field in a two way binding.
  * Changes from either the view or the field expression are synchronized between each instance.
  * The [inverseSetter] returns values from the bound view and allows you to mutate values.
  */
-fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldExprFromDate(inverseSetter: InverseSetter<Calendar>)
+fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldFromDate(
+        inverseSetter: InverseSetter<Calendar> = {
+            val observableField = oneWayBinding.oneWayExpression.converter.observableField
+            observableField.value = it ?: observableField.defaultValue
+        })
         = toInput(DatePickerRegister(oneWayBinding.convert()), inverseSetter)
+
+/**
+ * Immediately binds changes from this [RatingBar] to the specified observable field in a two way binding.
+ * Changes from either the view or the field expression are synchronized between each instance.
+ * The [inverseSetter] returns values from the bound view and allows you to mutate values.
+ */
+fun TwoWayBindingExpression<Float, Float, ObservableBindingConverter<Float>, RatingBar>.toFieldFromRating(
+        inverseSetter: InverseSetter<Float> = {
+            val observableField = oneWayBinding.oneWayExpression.converter.observableField
+            observableField.value = it ?: observableField.defaultValue
+        })
+        = toInput(RatingBarRegister(), inverseSetter)

@@ -12,7 +12,7 @@ import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
 
-interface Binding<Input, Output, Converter : BindingConverter<Input>> {
+interface Binding {
 
     fun notifyValueChange()
 
@@ -29,7 +29,7 @@ fun <Input, TBinding : BindingConverter<Input>> TBinding.onIsNull() = OneWayExpr
 fun <TBinding : BindingConverter<String>> TBinding.onIsNullOrEmpty() = OneWayExpression(this, String::isNullOrEmpty)
 
 class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
-        val binding: Converter,
+        val converter: Converter,
         val expression: BindingExpression<Input, Output>) {
     fun <V : View> toView(view: V, viewExpression: (V, Output) -> Unit)
             = OneWayBinding<Input, Output, Converter, V>(this).toView(view, viewExpression)
@@ -38,23 +38,23 @@ class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
 
 class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View>(
         val oneWayExpression: OneWayExpression<Input, Output, Converter>,
-        val binding: Converter = oneWayExpression.binding) : Binding<Input, Output, Converter> {
+        val converter: Converter = oneWayExpression.converter) : Binding {
 
     var viewExpression: ((V, Output) -> Unit)? = null
     var view: V? = null
 
-    fun convert() = oneWayExpression.expression(binding.convertValue())
+    fun convert() = oneWayExpression.expression(converter.convertValue())
 
     @Suppress("UNCHECKED_CAST")
     fun toView(view: V, viewExpression: ((V, Output) -> Unit)) = apply {
         this.viewExpression = viewExpression
         this.view = view
         notifyValueChange()
-        binding.bind(this)
+        converter.bind(this)
     }
 
     override fun unbind() {
-        binding.unbind(this)
+        converter.unbind(this)
     }
 
     /**

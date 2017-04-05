@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.DatePicker
 import android.widget.DatePicker.OnDateChangedListener
+import android.widget.RatingBar
 import android.widget.TextView
 import java.lang.ref.WeakReference
 import java.util.*
@@ -13,19 +14,23 @@ import java.util.Calendar.*
 
 private typealias Callback<T> = (T) -> Unit
 
-interface ViewRegister<in V : View, out Output> {
+abstract class ViewRegister<in V : View, Output> {
 
-    fun register(view: V, callback: Callback<Output?>)
+    var callback: (((Output?) -> Unit))? = null
 
-    fun deregister(view: V)
+    fun register(view: V, callback: Callback<Output?>) {
+        this.callback = callback
+        register(view)
+    }
+
+    abstract fun register(view: V)
+
+    abstract fun deregister(view: V)
 }
 
-class TextViewRegister : ViewRegister<TextView, String>, TextWatcher {
+class TextViewRegister : ViewRegister<TextView, String>(), TextWatcher {
 
-    private var callback: ((String?) -> Unit)? = null
-
-    override fun register(view: TextView, callback: Callback<String?>) {
-        this.callback = callback
+    override fun register(view: TextView) {
         view.addTextChangedListener(this)
     }
 
@@ -44,13 +49,10 @@ class TextViewRegister : ViewRegister<TextView, String>, TextWatcher {
     }
 }
 
-class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>, CompoundButton.OnCheckedChangeListener {
+class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>(), CompoundButton.OnCheckedChangeListener {
 
-    private var callback: ((Boolean?) -> Unit)? = null
-
-    override fun register(view: CompoundButton, callback: Callback<Boolean?>) {
+    override fun register(view: CompoundButton) {
         view.setOnCheckedChangeListener(this)
-        this.callback = callback
     }
 
     override fun deregister(view: CompoundButton) {
@@ -63,7 +65,7 @@ class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>, CompoundB
 
 }
 
-class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>,
+class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>(),
         OnDateChangedListener {
 
     private class WeakOnDateChangedListener(self: OnDateChangedListener) : OnDateChangedListener {
@@ -77,10 +79,7 @@ class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<Date
 
     private val listener = WeakOnDateChangedListener(this)
 
-    private var callback: Callback<Calendar?>? = null
-
-    override fun register(view: DatePicker, callback: Callback<Calendar?>) {
-        this.callback = callback
+    override fun register(view: DatePicker) {
         view.init(initialValue[YEAR], initialValue[MONTH], initialValue[DAY_OF_MONTH], listener)
     }
 
@@ -94,6 +93,22 @@ class DatePickerRegister(private val initialValue: Calendar) : ViewRegister<Date
         calendar[DAY_OF_MONTH] = dayOfMonth
         calendar[YEAR] = year
         callback?.invoke(calendar)
+    }
+
+}
+
+class RatingBarRegister : ViewRegister<RatingBar, Float>(), RatingBar.OnRatingBarChangeListener {
+
+    override fun register(view: RatingBar) {
+        view.onRatingBarChangeListener = this
+    }
+
+    override fun deregister(view: RatingBar) {
+        view.onRatingBarChangeListener = null
+    }
+
+    override fun onRatingChanged(ratingBar: RatingBar?, rating: Float, fromUser: Boolean) {
+        callback?.invoke(rating)
     }
 
 }

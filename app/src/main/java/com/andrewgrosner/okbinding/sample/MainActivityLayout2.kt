@@ -46,7 +46,7 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                     }
 
                     editText {
-                        hint = "This should change"
+                        hint = "Text mirrors below (Two way)"
                         twoWay(MainActivityViewModel::formInput,
                                 bindSelf(viewModel.formInput).toText(this)
                                         .twoWay().toFieldFromText())
@@ -55,8 +55,17 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                     }
 
                     textView {
-                        id = R.id.mirrorText
                         oneWay(bindSelf(viewModel.formInput).toText(this))
+                    }
+
+                    editText {
+                        hint = "Text mirrors below (One way to source)"
+                        oneWayToSource(bind(this, TextViewRegister()).onSelf()
+                                .toObservable(viewModel.oneWaySourceInput))
+                    }
+
+                    textView {
+                        oneWay(bindSelf(viewModel.oneWaySourceInput).toText(this))
                     }
 
                     switch {
