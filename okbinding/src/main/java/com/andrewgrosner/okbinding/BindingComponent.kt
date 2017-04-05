@@ -6,6 +6,7 @@ import com.andrewgrosner.okbinding.bindings.OneWayBinding
 import com.andrewgrosner.okbinding.bindings.OneWayToSource
 import com.andrewgrosner.okbinding.bindings.TwoWayBinding
 import org.jetbrains.anko.AnkoComponent
+import org.jetbrains.anko.AnkoContext
 import kotlin.reflect.KProperty
 
 abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
@@ -46,5 +47,9 @@ abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
     @Suppress("UNCHECKED_CAST")
     fun <Output> twoWayBindingFor(observableField: ObservableField<Output>) = bindingHolder.twoWayBindingFor(observableField)
 
-    fun destroyView() = bindingHolder.unbind()
+    override final fun createView(ui: AnkoContext<T>) = createViewWithBindings(ui).apply { bindingHolder.bindAll() }
+
+    abstract fun createViewWithBindings(ui: AnkoContext<T>): View
+
+    fun destroyView() = bindingHolder.unbindAll()
 }

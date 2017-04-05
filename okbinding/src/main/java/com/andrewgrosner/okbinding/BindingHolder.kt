@@ -28,11 +28,6 @@ class BindingHolder<V>(viewModel: V) {
                     (field as Observable).removeOnPropertyChangedCallback(onViewModelChanged)
                 }
                 field = value
-
-                // new field is observable, register now for changes
-                if (value is Observable) {
-                    value.addOnPropertyChangedCallback(onViewModelChanged)
-                }
             }
         }
 
@@ -99,7 +94,25 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    fun unbind() {
+    fun bindAll() {
+        // new field is observable, register now for changes
+        val viewModel = this.viewModel
+        if (viewModel is Observable) {
+            viewModel.addOnPropertyChangedCallback(onViewModelChanged)
+        }
+
+        bindings.forEach { it.bind() }
+
+        sourceBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
+
+        propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
+
+        twoWayBindings.values.forEach { it.bind() }
+        twoWayPropertyBindings.values.forEach { it.bind() }
+    }
+
+
+    fun unbindAll() {
         val viewModel = viewModel
         if (viewModel is Observable) {
             viewModel.removeOnPropertyChangedCallback(onViewModelChanged)
