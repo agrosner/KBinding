@@ -37,6 +37,11 @@ holder.oneWayToSource(bind(textView)
     .onSelf()
     .to { input, view -> viewModel.name = input})
 
+holder.viewModel = viewModel // set the ViewModel (no restriction and could be a `Presenter`)
+holder.bind() // binds all bindings, also will execute all of them once.
+
+holder.unbind() // when done, unbind
+
 ```
 
 ## Getting Started
