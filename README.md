@@ -148,21 +148,22 @@ override fun onDestroy() {
 
 ```
 
-## Supported bindings
+# Supported bindings
 
 Currently we support three kinds of bindings:
   1. `oneWay` -> handle changes from `ViewModel` to `View`
   2. `twoWay` -> handles changes in both directions between `ViewModel` <-> `View`
   3. `oneWayToSource` -> handles changes from `View` to `ViewModel`
 
-### One Way Bindings
+## One Way Bindings
 
 `oneWay` bindings handle changes from a, `Observable` or functional expression on a specific `View`.
 
 The changes from an `ObservableField` come directly from the instance while changes
 from an expression need explicit wiring to determine for which property it came from.
 
- expression or `ObservableField.value` -> `Output` -> `View` -> `View` property set from `Output`
+### Flow
+expression or `ObservableField.value` -> `Output` -> `View` -> `View` property set from `Output`
 
 The expression or `ObservableField.value` is considered the `Input` which can get transformed in the `Output` phase,
 which then applies to the `View` via Setter methods.  This library provides a few default out-of-the-box methods as conveniences. These are fully extensible and customizable.
@@ -226,12 +227,14 @@ textView {
 ```
 
 
-### One Way To Source Bindings
+## One Way To Source Bindings
 
 `oneWayToSource` is the reverse of `oneWay`. It specifies that we want changes from the UI to send back data to our `ViewModel` via an `ObservableField` or expression.
 
 Since Views will send back results to the expression or `ObservableField`, registering is a little different. We must first bind a `View` via a `ViewRegister`. `ViewRegister` are an abstract class that handle registering and unregistering specific listeners on `View`. For example, a `OnTextChangedRegister()` adds a `TextWatcher` on a `TextView` and receives callbacks when text changes. That result is then passed along to the expression or `ObservableField`.
 
+
+### Flow
 `View` -> `Output` -> `Input` -> expression or `ObservableField.value`
 
 The `ViewRegister` knows how to convert the view's data to an `Output`, then the `on` clause specifies a potential conversion into another type, the `Input` which gets sent to the expression or `ObservableField.value`.
@@ -287,13 +290,13 @@ textView {
 }
 ```
 
-### Two Way Bindings
+## Two Way Bindings
 
 `twoWay` bindings are slightly more complex and complicated. It specifies that an expression or `ObservableField` and `View`'s data are synchronized. We only allow one such binding per `KProperty` or `ObservableField` to prevent a cycle of updates occurring in the UI.
 
 We start off the binding the same way as a `oneWay` (`twoWay` extends off of `oneWay`) and then specify we want it `twoWay` and complete the reverse assignment. Any default, out-of-the-box `oneWay` binding on a `View` will only update `View` when the value is different than the current value. This prevents update cycles that could occur in a `twoWay`.
 
-
+### Flow
 expression or `ObservableField.value` -> `Output` -> `View` -> `View` property set -> `Output` -> expression or `ObservableField.value` is set if changed.
 
 When a `View` changes, it notifies the expression or `ObservableField`. When the expression or `ObservableField` changes, they notify the `View`. Both the `View` and `ObservableField` have mechanisms in place to only change and notify when their value changes so that a cycle in this flow doesn't happen.
@@ -321,3 +324,14 @@ editText {
             })
 }
 ```
+
+## Pull Requests
+I welcome and encourage all pull requests. It usually will take me within 24-48 hours to respond to any issue or request. Here are some basic rules to follow to ensure timely addition of your request:
+  1. Match coding style (braces, spacing, etc.) This is best achieved using CMD+Option+L (Reformat code) on Mac (not sure for Windows) with Android Studio defaults.
+  2. If its a feature, bugfix, or anything please only change code to what you specify.
+  3. Please keep PR titles easy to read and descriptive of changes, this will make them easier to merge :)
+  4. Pull requests _must_ be made against `develop` branch. Any other branch (unless specified by the maintainers) will get rejected.
+  5. Have fun!
+
+## Maintained By
+[agrosner](https://github.com/agrosner) ([@agrosner](https://www.twitter.com/agrosner))
