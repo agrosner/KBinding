@@ -3,11 +3,9 @@ package com.andrewgrosner.okbinding.bindings
 import android.view.View
 import android.widget.CompoundButton
 import android.widget.DatePicker
+import android.widget.RatingBar
 import android.widget.TextView
-import com.andrewgrosner.okbinding.viewextensions.setCheckedIfNecessary
-import com.andrewgrosner.okbinding.viewextensions.setTextIfNecessary
-import com.andrewgrosner.okbinding.viewextensions.setTimeIfNecessary
-import com.andrewgrosner.okbinding.viewextensions.setVisibilityIfNeeded
+import com.andrewgrosner.okbinding.viewextensions.*
 import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
@@ -110,3 +108,6 @@ infix fun <Input, TBinding : ObservableBindingConverter<Input>>
         OneWayExpression<Input, Calendar, TBinding>.toDatePicker(datePicker: DatePicker)
         = toView(datePicker, DatePicker::setTimeIfNecessary)
 
+infix fun <Input, TBinding : BindingConverter<Input>>
+        OneWayExpression<Input, Float, TBinding>.toRating(ratingBar: RatingBar)
+        = toView(ratingBar, RatingBar::setRatingIfNecessary)
