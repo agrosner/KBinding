@@ -24,7 +24,7 @@ class MainActivityViewModel : BaseObservable() {
     var normalField = ""
         set(value) {
             field = value
-            notifyChange(MainActivityViewModel::normalField)
+            notifyChange(this::normalField)
         }
 
     fun onFirstNameClick() {

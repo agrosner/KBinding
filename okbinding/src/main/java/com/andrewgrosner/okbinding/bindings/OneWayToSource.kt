@@ -19,7 +19,6 @@ fun bind(v: RatingBar) = ViewBinder(v, OnRatingBarChangedRegister())
 
 fun bind(v: SeekBar) = ViewBinder(v, OnSeekBarChangedRegister())
 
-
 class ViewBinder<V : View, Output>(val view: V,
                                    val viewRegister: ViewRegister<V, Output>)
 
