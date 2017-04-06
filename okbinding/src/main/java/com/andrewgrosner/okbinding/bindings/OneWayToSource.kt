@@ -13,9 +13,12 @@ fun bind(v: CompoundButton) = ViewBinder(v, OnCheckedChangeRegister())
 
 fun bind(v: DatePicker, initialValue: Calendar = Calendar.getInstance()) = ViewBinder(v, OnDateChangedRegister(initialValue))
 
+fun bind(v: TimePicker) = ViewBinder(v, OnTimeChangedRegister())
+
 fun bind(v: RatingBar) = ViewBinder(v, OnRatingBarChangedRegister())
 
 fun bind(v: SeekBar) = ViewBinder(v, OnSeekBarChangedRegister())
+
 
 class ViewBinder<V : View, Output>(val view: V,
                                    val viewRegister: ViewRegister<V, Output>)

@@ -145,6 +145,30 @@ fun TwoWayBindingExpression<Calendar, Calendar,
         = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
 
 /**
+ * Immediately binds changes from this [TimePicker] to the specified observable field in a two way binding.
+ * Changes from either the view or the field expression are synchronized between each instance.
+ *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
+ */
+fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, TimePicker>.toFieldFromTime(
+        inverseSetter: InverseSetter<Calendar> = {
+            val observableField = oneWayBinding.oneWayExpression.converter.observableField
+            observableField.value = it ?: observableField.defaultValue
+        })
+        = toInput(OnTimeChangedRegister(), inverseSetter)
+
+/**
+ * Immediately binds changes from this [TimePicker] to the specified expression in a two way binding.
+ * The expression should mutate a field that is observed and pass changes back up to the parent [BaseObservable].
+ * Changes from either the view or the field are synchronized between each instance.
+ *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
+ *  Otherwise the view in this binding will not receive updates and two way binding will not work.
+ */
+fun TwoWayBindingExpression<Calendar, Calendar,
+        BindingConverter<Calendar>, TimePicker>.toExprFromTime(
+        inverseSetter: InverseSetter<Calendar>)
+        = toInput(OnTimeChangedRegister(), inverseSetter)
+
+/**
  * Immediately binds changes from this [RatingBar] to the specified observable field in a two way binding.
  * Changes from either the view or the field expression are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.

@@ -1,5 +1,6 @@
 package com.andrewgrosner.okbinding.bindings
 
+import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -95,12 +96,41 @@ class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<D
         set(YEAR, view.year)
     }!!
 
-    override fun onDateChanged(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
+    override fun onDateChanged(view: DatePicker, year: Int, monthOfYear: Int, dayOfMonth: Int) {
         val calendar = Calendar.getInstance()
         calendar[MONTH] = monthOfYear
         calendar[DAY_OF_MONTH] = dayOfMonth
         calendar[YEAR] = year
         callback?.invoke(calendar)
+    }
+
+}
+
+class OnTimeChangedRegister : ViewRegister<TimePicker, Calendar>(), TimePicker.OnTimeChangedListener {
+
+    override fun register(view: TimePicker) {
+        view.setOnTimeChangedListener(this)
+    }
+
+    override fun deregister(view: TimePicker) {
+        view.setOnTimeChangedListener(null)
+    }
+
+    override fun getValue(view: TimePicker) = getInstance().apply {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            set(HOUR_OF_DAY, view.currentHour)
+            set(MINUTE, view.currentMinute)
+        } else {
+            set(HOUR_OF_DAY, view.hour)
+            set(MINUTE, view.minute)
+        }
+    }!!
+
+    override fun onTimeChanged(view: TimePicker, hourOfDay: Int, minute: Int) {
+        callback?.invoke(getInstance().apply {
+            set(HOUR_OF_DAY, hourOfDay)
+            set(MINUTE, minute)
+        })
     }
 
 }
