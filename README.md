@@ -38,9 +38,9 @@ holder.oneWayToSource(bind(textView)
     .to { input, view -> viewModel.name = input})
 
 holder.viewModel = viewModel // set the ViewModel (no restriction and could be a `Presenter`)
-holder.bind() // binds all bindings, also will execute all of them once.
+holder.bindAll() // binds all bindings, also will execute all of them once.
 
-holder.unbind() // when done, unbind
+holder.unbindAll() // when done, unbind
 
 ```
 
@@ -162,9 +162,9 @@ Currently we support three kinds of bindings:
 
 ## One Way Bindings
 
-`oneWay` bindings handle changes from a, `Observable` or functional expression on a specific `View`.
+`oneWay` bindings handle changes from a `Observable` or functional expression on a specific `View`.
 
-The changes from an `ObservableField` come directly from the instance while changes
+The changes from an `ObservableField` come directly from the instance, while changes
 from an expression need explicit wiring to determine for which property it came from.
 
 ### Flow
@@ -242,7 +242,8 @@ Since Views will send back results to the expression or `ObservableField`, regis
 ### Flow
 `View` -> `Output` -> `Input` -> expression or `ObservableField.value`
 
-The `ViewRegister` knows how to convert the view's data to an `Output`, then the `on` clause specifies a potential conversion into another type, the `Input` which gets sent to the expression or `ObservableField.value`.
+The `ViewRegister` knows how to convert the view's data to an `Output`, then the `on` clause specifies a potential conversion into another type `Input`.
+Then the `Input` gets sent to the expression or `ObservableField.value` for updating.
 For example:
 
 ```kotlin
