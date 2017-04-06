@@ -263,21 +263,16 @@ Without convenience methods, we must create a `ViewRegister`:
 ```kotlin
 class MyOnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
 
-    override fun registerView(view: TextView) {
-        view.addTextChangedListener(this)
-    }
+    override fun registerView(view: TextView) = view.addTextChangedListener(this)
 
-    override fun deregisterFromView(view: TextView) {
-        view.removeTextChangedListener(this)
-    }
+    override fun deregisterFromView(view: TextView) = view.removeTextChangedListener(this)
 
     override fun afterTextChanged(s: Editable?) = Unit
 
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        @Suppress("UNCHECKED_CAST")
-        callback?.invoke(s?.toString()) // callback is given in base. pass result of changes to it.
+        notifyChange(s?.toString()) // pass changes to to listeners so data can update.
     }
 
     override fun getValue(view: TextView) = view.text.toString() // specifies how to convert view data out
