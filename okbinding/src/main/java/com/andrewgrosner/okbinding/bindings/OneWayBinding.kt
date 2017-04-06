@@ -28,7 +28,9 @@ fun <Input, TBinding : BindingConverter<Input>> TBinding.onSelf() = OneWayExpres
 
 fun <Input, TBinding : BindingConverter<Input>> TBinding.onIsNull() = OneWayExpression(this, { it == null })
 
-fun <TBinding : BindingConverter<String>> TBinding.onIsNullOrEmpty() = OneWayExpression(this, String::isNullOrEmpty)
+fun <TChar : CharSequence?, TBinding : BindingConverter<TChar>> TBinding.onIsNullOrEmpty() = OneWayExpression(this, { it.isNullOrEmpty() })
+
+fun <TChar : CharSequence?, TBinding : BindingConverter<TChar>> TBinding.onIsNotNullOrEmpty() = OneWayExpression(this, { !it.isNullOrEmpty() })
 
 class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
         val converter: Converter,

@@ -1,6 +1,5 @@
 package com.andrewgrosner.okbinding.sample
 
-import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import com.andrewgrosner.okbinding.BindingComponent
 import com.andrewgrosner.okbinding.bindings.*
@@ -21,10 +20,10 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                         id = R.id.firstName
                         textSize = 16f
                         oneWay(MainActivityViewModel::firstName,
-                                bindSelf { viewModel.firstName }.toView(this) { view, text ->
-                                    view.text = text
-                                    view.visibility = if (text.isNotBlank()) View.VISIBLE else View.GONE
-                                })
+                                bindSelf { viewModel.firstName }.toText(this))
+                        oneWay(MainActivityViewModel::firstName,
+                                bind { viewModel.firstName }.onIsNotNullOrEmpty()
+                                        .toViewVisibilityB(this))
 
                         onClick { viewModel.onFirstNameClick() }
                     }.lparams {
@@ -45,9 +44,8 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                 editText {
                     hint = "Text mirrors below (Two way)"
-                    twoWay(MainActivityViewModel::formInput,
-                            bindSelf(viewModel.formInput).toText(this)
-                                    .twoWay().toFieldFromText())
+                    twoWay(bindSelf(viewModel.formInput).toText(this)
+                            .twoWay().toFieldFromText())
                 }.lparams {
                     width = MATCH_PARENT
                 }
