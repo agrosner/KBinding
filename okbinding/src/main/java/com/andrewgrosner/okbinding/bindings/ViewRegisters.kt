@@ -3,11 +3,8 @@ package com.andrewgrosner.okbinding.bindings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.CompoundButton
-import android.widget.DatePicker
+import android.widget.*
 import android.widget.DatePicker.OnDateChangedListener
-import android.widget.RatingBar
-import android.widget.TextView
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.Calendar.*
@@ -122,6 +119,30 @@ class OnRatingBarChangedRegister : ViewRegister<RatingBar, Float>(), RatingBar.O
 
     override fun onRatingChanged(ratingBar: RatingBar?, rating: Float, fromUser: Boolean) {
         callback?.invoke(rating)
+    }
+
+}
+
+class OnSeekBarChangedRegister : ViewRegister<SeekBar, Int>(), SeekBar.OnSeekBarChangeListener {
+
+    override fun register(view: SeekBar) {
+        view.setOnSeekBarChangeListener(this)
+    }
+
+    override fun deregister(view: SeekBar) {
+        view.setOnSeekBarChangeListener(null)
+    }
+
+    override fun getValue(view: SeekBar) = view.progress
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        callback?.invoke(progress)
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
     }
 
 }

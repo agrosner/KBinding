@@ -1,10 +1,7 @@
 package com.andrewgrosner.okbinding.bindings
 
 import android.view.View
-import android.widget.CompoundButton
-import android.widget.DatePicker
-import android.widget.RatingBar
-import android.widget.TextView
+import android.widget.*
 import java.util.*
 
 fun <Input, Output, Converter : BindingConverter<Input>, V : View>
@@ -119,3 +116,15 @@ fun TwoWayBindingExpression<Float, Float, ObservableBindingConverter<Float>, Rat
             observableField.value = it ?: observableField.defaultValue
         })
         = toInput(OnRatingBarChangedRegister(), inverseSetter)
+
+/**
+ * Immediately binds changes from this [SeekBar] to the specified observable field in a two way binding.
+ * Changes from either the view or the field expression are synchronized between each instance.
+ * The [inverseSetter] returns values from the bound view and allows you to mutate values.
+ */
+fun TwoWayBindingExpression<Int, Int, ObservableBindingConverter<Int>, SeekBar>.toFieldFromSeekBar(
+        inverseSetter: InverseSetter<Int> = {
+            val observableField = oneWayBinding.oneWayExpression.converter.observableField
+            observableField.value = it ?: observableField.defaultValue
+        })
+        = toInput(OnSeekBarChangedRegister(), inverseSetter)

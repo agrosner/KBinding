@@ -1,10 +1,7 @@
 package com.andrewgrosner.okbinding.bindings
 
 import android.view.View
-import android.widget.CompoundButton
-import android.widget.DatePicker
-import android.widget.RatingBar
-import android.widget.TextView
+import android.widget.*
 import com.andrewgrosner.okbinding.viewextensions.*
 import java.util.*
 
@@ -111,3 +108,7 @@ infix fun <Input, TBinding : ObservableBindingConverter<Input>>
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Float, TBinding>.toRating(ratingBar: RatingBar)
         = toView(ratingBar, RatingBar::setRatingIfNecessary)
+
+infix fun <Input, TBinding : BindingConverter<Input>>
+        OneWayExpression<Input, Int, TBinding>.toProgressBar(progressBar: ProgressBar)
+        = toView(progressBar, ProgressBar::setProgressIfNecessary)
