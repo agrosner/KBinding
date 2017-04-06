@@ -22,6 +22,10 @@ import kotlin.reflect.KProperty
  * must be used, <code>A</code> should be some kind of containing structure that
  * the subclass may reuse between notifications.</p>
  *
+ * <p>
+ * This is a Kotlin-specific modification of the Android Databinding class.
+ * </p>
+ *
  * @param <C> The callback type.
  * @param <T> The notification sender type. Typically this is the containing class.
  * @param <A> Opaque argument used to pass additional data beyond an int.
@@ -62,13 +66,13 @@ open class CallbackRegistry<C, T, A>
      * Notify all callbacks.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      */
     @Synchronized fun notifyCallbacks(sender: T, property: KProperty<*>?, arg2: A) {
         mNotificationLevel++
@@ -96,13 +100,13 @@ open class CallbackRegistry<C, T, A>
      * Notify up to the first Long.SIZE callbacks that don't have a bit set in `removed`.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      */
     private fun notifyFirst64(sender: T, property: KProperty<*>?, arg2: A) {
         val maxNotified = Math.min(java.lang.Long.SIZE, mCallbacks.size)
@@ -118,13 +122,13 @@ open class CallbackRegistry<C, T, A>
      * Recursion is used to avoid allocating temporary state on the heap.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      */
     private fun notifyRecurse(sender: T, property: KProperty<*>?, arg2: A) {
         val callbackCount = mCallbacks.size
@@ -148,13 +152,13 @@ open class CallbackRegistry<C, T, A>
      * remainderIndex is -1, the first 64 will be notified instead.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param remainderIndex The index into mRemainderRemoved that should be notified.
      */
@@ -180,13 +184,13 @@ open class CallbackRegistry<C, T, A>
      * endIndex should be notified.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry.NotifierCallback.onNotifyCallback]
+     * * [CallbackRegistry] callback
      * *
      * @param startIndex The index into the mCallbacks to start notifying.
      * *
@@ -426,7 +430,7 @@ class PropertyChangeRegistry : CallbackRegistry<(Observable, KProperty<*>?) -> U
 
     companion object {
         val notifierCallback = { callback: (Observable, KProperty<*>?) -> Unit,
-                                 sender: Observable, property: KProperty<*>?, notUsed: Unit? ->
+                                 sender: Observable, property: KProperty<*>?, _: Unit? ->
             callback(sender, property)
         }
     }

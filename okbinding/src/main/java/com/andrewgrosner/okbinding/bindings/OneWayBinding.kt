@@ -16,15 +16,32 @@ interface Binding {
     fun unbind()
 }
 
-infix fun <Input, Output, TBinding : BindingConverter<Input>> TBinding.on(expression: BindingExpression<Input, Output>)
-        = OneWayExpression(this, expression)
+infix fun <Input, Output, TBinding : BindingConverter<Input>>
+        TBinding.on(expression: BindingExpression<Input, Output>) = OneWayExpression(this, expression)
 
+/**
+ * Builds an expression that returns itself as the Output of the [Input].
+ */
 fun <Input, TBinding : BindingConverter<Input>> TBinding.onSelf() = OneWayExpression(this, { it })
 
+/**
+ * Builds an expression that returns true if the object is null.
+ */
 fun <Input, TBinding : BindingConverter<Input>> TBinding.onIsNull() = OneWayExpression(this, { it == null })
 
+/**
+ * Builds an expression that returns true if the object is not null.
+ */
+fun <Input, TBinding : BindingConverter<Input>> TBinding.onIsNotNull() = OneWayExpression(this, { it != null })
+
+/**
+ * Builds an expression on a [CharSequence] that returns true if [isNullOrEmpty].
+ */
 fun <TChar : CharSequence?, TBinding : BindingConverter<TChar>> TBinding.onIsNullOrEmpty() = OneWayExpression(this, { it.isNullOrEmpty() })
 
+/**
+ * Builds an expression on a [CharSequence] that returns true if not [isNullOrEmpty].
+ */
 fun <TChar : CharSequence?, TBinding : BindingConverter<TChar>> TBinding.onIsNotNullOrEmpty() = OneWayExpression(this, { !it.isNullOrEmpty() })
 
 class OneWayExpression<Input, Output, Converter : BindingConverter<Input>>(
@@ -75,7 +92,7 @@ class OneWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
 
 /**
  * Immediately binds the [View] to the value of this binding. Toggles visibility based on [Int] returned
- * in previous expressions.
+ * in previous expressions. The [Int] aligns with [View] visibility ints.
  */
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Int, TBinding>.toViewVisibility(textView: View)
@@ -97,18 +114,30 @@ infix fun <Input, TBinding : BindingConverter<Input>, TChar : CharSequence?>
         OneWayExpression<Input, TChar, TBinding>.toText(textView: TextView)
         = toView(textView, TextView::setTextIfNecessary)
 
+/**
+ * Binds the output of the initial expression to [CompoundButton.setChecked] method.
+ */
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton)
         = toView(compoundButton, CompoundButton::setCheckedIfNecessary)
 
+/**
+ * Binds the output of the initial expression to [DatePicker.updateDate] method.
+ */
 infix fun <Input, TBinding : ObservableBindingConverter<Input>>
         OneWayExpression<Input, Calendar, TBinding>.toDatePicker(datePicker: DatePicker)
         = toView(datePicker, DatePicker::setTimeIfNecessary)
 
+/**
+ * Binds the output of the initial expression to [RatingBar.setRating] method.
+ */
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Float, TBinding>.toRating(ratingBar: RatingBar)
         = toView(ratingBar, RatingBar::setRatingIfNecessary)
 
+/**
+ * Binds the output of the initial expression to [ProgressBar.setProgress] method.
+ */
 infix fun <Input, TBinding : BindingConverter<Input>>
         OneWayExpression<Input, Int, TBinding>.toProgressBar(progressBar: ProgressBar)
         = toView(progressBar, ProgressBar::setProgressIfNecessary)

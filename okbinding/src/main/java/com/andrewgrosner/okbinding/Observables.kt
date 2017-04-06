@@ -63,7 +63,7 @@ open class BaseObservable : Observable {
 
      * @param fieldId The generated BR id for the Bindable field.
      */
-    @Synchronized fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyCallbacks(this, property, null)
+    @Synchronized fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyChange(this, property)
 }
 
 
