@@ -263,12 +263,11 @@ Without convenience methods, we must create a `ViewRegister`:
 ```kotlin
 class MyOnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
 
-    override fun register(view: TextView) {
+    override fun registerView(view: TextView) {
         view.addTextChangedListener(this)
     }
 
-    override fun deregister(view: TextView) {
-        this.callback = null
+    override fun deregisterFromView(view: TextView) {
         view.removeTextChangedListener(this)
     }
 

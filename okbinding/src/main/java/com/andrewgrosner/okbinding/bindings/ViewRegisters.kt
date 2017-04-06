@@ -14,28 +14,37 @@ private typealias Callback<T> = (T) -> Unit
 
 abstract class ViewRegister<in V : View, Output> {
 
-    var callback: (((Output?) -> Unit))? = null
+    private var callback: (((Output?) -> Unit))? = null
 
     fun register(view: V, callback: Callback<Output?>) {
         this.callback = callback
-        register(view)
+        registerView(view)
     }
 
-    abstract fun register(view: V)
 
-    abstract fun deregister(view: V)
+    fun deregister(view: V) {
+        deregisterFromView(view)
+        this.callback = null
+    }
+
+    abstract fun registerView(view: V)
+
+    open fun deregisterFromView(view: V) {}
 
     abstract fun getValue(view: V): Output
+
+    protected fun notifyChange(output: Output?) {
+        callback?.invoke(output)
+    }
 }
 
 class OnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
 
-    override fun register(view: TextView) {
+    override fun registerView(view: TextView) {
         view.addTextChangedListener(this)
     }
 
-    override fun deregister(view: TextView) {
-        this.callback = null
+    override fun deregisterFromView(view: TextView) {
         view.removeTextChangedListener(this)
     }
 
@@ -43,27 +52,22 @@ class OnTextChangedRegister : ViewRegister<TextView, String>(), TextWatcher {
 
     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
-    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        @Suppress("UNCHECKED_CAST")
-        callback?.invoke(s?.toString())
-    }
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = notifyChange(s?.toString())
 
     override fun getValue(view: TextView) = view.text.toString()
 }
 
 class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>(), CompoundButton.OnCheckedChangeListener {
 
-    override fun register(view: CompoundButton) {
+    override fun registerView(view: CompoundButton) {
         view.setOnCheckedChangeListener(this)
     }
 
-    override fun deregister(view: CompoundButton) {
+    override fun deregisterFromView(view: CompoundButton) {
         view.setOnCheckedChangeListener(null)
     }
 
-    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-        callback?.invoke(isChecked)
-    }
+    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) = notifyChange(isChecked)
 
     override fun getValue(view: CompoundButton) = view.isChecked
 }
@@ -82,12 +86,8 @@ class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<D
 
     private val listener = WeakOnDateChangedListener(this)
 
-    override fun register(view: DatePicker) {
+    override fun registerView(view: DatePicker) {
         view.init(initialValue[YEAR], initialValue[MONTH], initialValue[DAY_OF_MONTH], listener)
-    }
-
-    override fun deregister(view: DatePicker) {
-        this.callback = null
     }
 
     override fun getValue(view: DatePicker) = getInstance().apply {
@@ -101,18 +101,18 @@ class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<D
         calendar[MONTH] = monthOfYear
         calendar[DAY_OF_MONTH] = dayOfMonth
         calendar[YEAR] = year
-        callback?.invoke(calendar)
+        notifyChange(calendar)
     }
 
 }
 
 class OnTimeChangedRegister : ViewRegister<TimePicker, Calendar>(), TimePicker.OnTimeChangedListener {
 
-    override fun register(view: TimePicker) {
+    override fun registerView(view: TimePicker) {
         view.setOnTimeChangedListener(this)
     }
 
-    override fun deregister(view: TimePicker) {
+    override fun deregisterFromView(view: TimePicker) {
         view.setOnTimeChangedListener(null)
     }
 
@@ -126,48 +126,42 @@ class OnTimeChangedRegister : ViewRegister<TimePicker, Calendar>(), TimePicker.O
         }
     }!!
 
-    override fun onTimeChanged(view: TimePicker, hourOfDay: Int, minute: Int) {
-        callback?.invoke(getInstance().apply {
-            set(HOUR_OF_DAY, hourOfDay)
-            set(MINUTE, minute)
-        })
-    }
+    override fun onTimeChanged(view: TimePicker, hourOfDay: Int, minute: Int) = notifyChange(getInstance().apply {
+        set(HOUR_OF_DAY, hourOfDay)
+        set(MINUTE, minute)
+    })
 
 }
 
 class OnRatingBarChangedRegister : ViewRegister<RatingBar, Float>(), RatingBar.OnRatingBarChangeListener {
 
-    override fun register(view: RatingBar) {
+    override fun registerView(view: RatingBar) {
         view.onRatingBarChangeListener = this
     }
 
-    override fun deregister(view: RatingBar) {
+    override fun deregisterFromView(view: RatingBar) {
         view.onRatingBarChangeListener = null
     }
 
     override fun getValue(view: RatingBar) = view.rating
 
-    override fun onRatingChanged(ratingBar: RatingBar?, rating: Float, fromUser: Boolean) {
-        callback?.invoke(rating)
-    }
+    override fun onRatingChanged(ratingBar: RatingBar?, rating: Float, fromUser: Boolean) = notifyChange(rating)
 
 }
 
 class OnSeekBarChangedRegister : ViewRegister<SeekBar, Int>(), SeekBar.OnSeekBarChangeListener {
 
-    override fun register(view: SeekBar) {
+    override fun registerView(view: SeekBar) {
         view.setOnSeekBarChangeListener(this)
     }
 
-    override fun deregister(view: SeekBar) {
+    override fun deregisterFromView(view: SeekBar) {
         view.setOnSeekBarChangeListener(null)
     }
 
     override fun getValue(view: SeekBar) = view.progress
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        callback?.invoke(progress)
-    }
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) = notifyChange(progress)
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {
     }
