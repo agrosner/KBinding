@@ -13,7 +13,7 @@ holder.oneWay(bindSelf(viewModel.name).toText(textView))
 holder.oneWay(ViewModel::name,
   bind({ viewModel.name })
     .on { if (it == "") View.GONE : View.VISIBLE } // convert to another type
-    .toViewVisibility())
+    .toViewVisibility(someView))
 
 // two way binding on observable that synchronizes text and value changes.
 holder.twoWay(bindSelf(viewModel.name)
@@ -138,14 +138,16 @@ Then to bind views:
 ```kotlin
 
 override fun createViewWithBindings(ui: AnkoContext<MainActivity>): View {
-        return with(ui) {
-          textView {
-            twoWay(UserViewModel::name,
-              bindSelf { viewModel.name }
-              .toText(this)
-              .twoWay()
-              .toFieldFromText())
-          }
+  return with(ui) {
+    textView {
+      twoWay(UserViewModel::name,
+        bindSelf { viewModel.name }
+        .toText(this)
+        .twoWay()
+        .toFieldFromText())
+    }
+  }
+}
 
 ```
 
