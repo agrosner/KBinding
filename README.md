@@ -44,6 +44,23 @@ holder.unbindAll() // when done, unbind
 
 ```
 
+## Including in your project
+
+```gradle
+
+allProjects {
+  repositories {
+    // required to find the project's artifacts
+    maven { url "https://www.jitpack.io" }
+  }
+}
+```
+
+```gradle
+compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used
+compile 'com.github.agrosner.KBinding:kbinding:1.0' // version of KPoet
+```
+
 ## Getting Started
 
 KBinding works best with [Anko](https://github.com/Kotlin/anko), but can be used by other consumers.

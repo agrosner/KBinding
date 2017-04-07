@@ -1,6 +1,7 @@
 package com.andrewgrosner.okbinding.viewextensions
 
-import android.support.v4.content.ContextCompat
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.view.View
 
 fun View.setVisibilityIfNeeded(visibility: Int) {
@@ -19,6 +20,18 @@ fun View.boolean(resId: Int) = context.resources.getBoolean(resId)
 
 fun View.text(resId: Int) = context.getText(resId)!!
 
-fun View.color(colorRes: Int) = ContextCompat.getColor(context, colorRes)
+fun View.color(colorRes: Int): Int {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        context.getColor(colorRes)
+    } else {
+        resources.getColor(colorRes)
+    }
+}
 
-fun View.drawable(drawableRes: Int) = ContextCompat.getDrawable(context, drawableRes)!!
+fun View.drawable(drawableRes: Int): Drawable {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        context.getDrawable(drawableRes)!!
+    } else {
+        resources.getDrawable(drawableRes)
+    }
+}
