@@ -58,7 +58,7 @@ allProjects {
 
 ```gradle
 compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used
-compile 'com.github.agrosner.KBinding:kbinding:1.0' // version of KPoet
+compile 'com.github.agrosner.KBinding:kbinding:1.0.0' // version of KPoet
 ```
 
 ## Getting Started
