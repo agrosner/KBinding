@@ -30,6 +30,14 @@ class TwoWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
 
     private val inverseSetters = mutableSetOf(inverseSetter)
 
+    init {
+        val component = oneWayBinding.converter.component
+
+        // unregister previously one way binding to ensure we don't duplicate
+        component.unregisterBinding(oneWayBinding)
+        component.registerBinding(this)
+    }
+
     /**
      * Appends another expression that gets called with the value of the view whenever the view itself changes.
      */
@@ -38,13 +46,19 @@ class TwoWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
     }
 
     override fun bind(data: Data) {
-        oneWayBinding.converter.component.registerBinding(this)
+        oneWayBinding.bind(data)
         viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
         oneWayBinding.notifyValueChange() // trigger value change on bind to respect value of ViewModel over view.
     }
 
     override fun unbind() {
         oneWayBinding.unbind()
+        viewRegister.deregister(oneWayBinding.view!!)
+        oneWayBinding.converter.component.unregisterBinding(this)
+    }
+
+    internal fun unbindInternal() {
+        oneWayBinding.unbindInternal()
         viewRegister.deregister(oneWayBinding.view!!)
     }
 

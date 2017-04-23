@@ -61,22 +61,27 @@ class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
 
     var data: Data? = null
 
-    fun convert() = oneWayExpression.expression(converter.convertValue(data!!))
+    fun convert() = oneWayExpression.expression(converter.convertValue(data))
 
     @Suppress("UNCHECKED_CAST")
     fun toView(view: V, viewExpression: ((V, Output) -> Unit)) = apply {
         this.viewExpression = viewExpression
         this.view = view
+        converter.component.registerBinding(this)
     }
 
     override fun bind(data: Data) {
-        converter.component.registerBinding(this)
         this.data = data
         notifyValueChange()
         converter.bind(this)
     }
 
     override fun unbind() {
+        unbindInternal()
+        converter.component.unregisterBinding(this)
+    }
+
+    internal fun unbindInternal() {
         converter.unbind(this)
     }
 

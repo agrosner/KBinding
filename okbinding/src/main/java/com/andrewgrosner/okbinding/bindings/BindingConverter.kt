@@ -10,7 +10,7 @@ interface BindingConverter<Data, out Input> {
 
     val component: BindingHolder<Data>
 
-    fun convertValue(data: Data): Input
+    fun convertValue(data: Data?): Input
 
     fun bind(binding: Binding<Data>) {}
     fun unbind(binding: Binding<Data>) {}
@@ -22,7 +22,7 @@ class ObservableBindingConverter<Data, Input>(val observableField: ObservableFie
 
     private var oneWayBinding: Binding<Data>? = null
 
-    override fun convertValue(data: Data) = observableField.value
+    override fun convertValue(data: Data?) = observableField.value
 
     override fun bind(binding: Binding<Data>) {
         this.oneWayBinding = binding
@@ -42,5 +42,8 @@ class ObservableBindingConverter<Data, Input>(val observableField: ObservableFie
 class InputExpressionBindingConverter<Data, Input>(val property: KProperty<*>,
                                                    val expression: (Data) -> Input,
                                                    override val component: BindingHolder<Data>) : BindingConverter<Data, Input> {
-    override fun convertValue(data: Data) = expression(data)
+    override fun convertValue(data: Data?) = when {
+        data != null -> expression(data)
+        else -> throw IllegalStateException("Ensure you bind the binding before accessing this method.")
+    }
 }

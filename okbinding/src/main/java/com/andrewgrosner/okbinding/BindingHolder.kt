@@ -55,6 +55,15 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
+    internal fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
+        if (oneWayBinding.converter is ObservableBindingConverter) {
+            bindings -= oneWayBinding
+        } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
+            val kProperty = oneWayBinding.converter.property
+            propertyBindings[kProperty]?.remove(oneWayBinding)
+        }
+    }
+
     internal fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
@@ -72,6 +81,17 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
+    internal fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
+        val converter = twoWayBinding.oneWayBinding.converter
+        if (converter is ObservableBindingConverter) {
+            val observableField = converter.observableField
+            twoWayBindings -= observableField
+        } else if (converter is InputExpressionBindingConverter) {
+            val key = converter.property
+            twoWayPropertyBindings -= key
+        }
+    }
+
     internal fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
         val view = oneWayToSource.view
         var mutableList = sourceBindings[view]
@@ -79,7 +99,12 @@ class BindingHolder<V>(viewModel: V) {
             mutableList = mutableListOf()
             sourceBindings[view] = mutableList
         }
-        mutableList?.add(oneWayToSource)
+        mutableList.add(oneWayToSource)
+    }
+
+    internal fun unregisterBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
+        val view = oneWayToSource.view
+        sourceBindings[view]?.remove(oneWayToSource)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -124,15 +149,18 @@ class BindingHolder<V>(viewModel: V) {
         if (viewModel is Observable) {
             viewModel.removeOnPropertyChangedCallback(onViewModelChanged)
         }
-        bindings.forEach { it.unbind() }
+        bindings.forEach { it.unbindInternal() }
         bindings.clear()
 
-        sourceBindings.values.forEach { bindings -> bindings.forEach { it.unbind() } }
+        sourceBindings.values.forEach { bindings -> bindings.forEach { it.unbindInternal() } }
+        sourceBindings.clear()
 
-        propertyBindings.values.forEach { bindings -> bindings.forEach { it.unbind() } }
+        propertyBindings.values.forEach { bindings -> bindings.forEach { it.unbindInternal() } }
         propertyBindings.clear()
 
-        twoWayBindings.values.forEach { it.unbind() }
-        twoWayPropertyBindings.values.forEach { it.unbind() }
+        twoWayBindings.values.forEach { it.unbindInternal() }
+        twoWayBindings.clear()
+        twoWayPropertyBindings.values.forEach { it.unbindInternal() }
+        twoWayPropertyBindings.clear()
     }
 }
