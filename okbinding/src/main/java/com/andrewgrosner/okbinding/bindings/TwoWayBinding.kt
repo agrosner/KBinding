@@ -21,10 +21,11 @@ private typealias InverseSetter<T> = (T?) -> Unit
 /**
  * Reverses the binding on a field to [View] and provides also [View] to Field support.
  */
-class TwoWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>(
+class TwoWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
+internal constructor(
         val twoWayBindingExpression: TwoWayBindingExpression<Data, Input, Output, Converter, V>,
         val viewRegister: ViewRegister<V, Output>,
-        val inverseSetter: InverseSetter<Output>,
+        inverseSetter: InverseSetter<Output>,
         val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
     : Binding<Data> {
 

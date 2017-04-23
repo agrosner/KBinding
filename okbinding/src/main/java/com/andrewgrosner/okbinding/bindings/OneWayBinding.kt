@@ -44,17 +44,17 @@ fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBin
  */
 fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBinding.onIsNotNullOrEmpty() = OneWayExpression(this, { !it.isNullOrEmpty() })
 
-class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>(
-        val converter: Converter,
-        val expression: BindingExpression<Input, Output>) {
+class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>
+internal constructor(val converter: Converter,
+                     val expression: BindingExpression<Input, Output>) {
     fun <V : View> toView(view: V, viewExpression: (V, Output) -> Unit)
             = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
 
 }
 
-class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>(
-        val oneWayExpression: OneWayExpression<Data, Input, Output, Converter>,
-        val converter: Converter = oneWayExpression.converter) : Binding<Data> {
+class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
+internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output, Converter>,
+                     val converter: Converter = oneWayExpression.converter) : Binding<Data> {
 
     var viewExpression: ((V, Output) -> Unit)? = null
     var view: V? = null

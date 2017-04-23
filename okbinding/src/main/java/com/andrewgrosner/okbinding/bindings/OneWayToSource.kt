@@ -31,9 +31,9 @@ fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.on(bindingExpres
 
 fun <Data, V : View, Output> ViewBinder<Data, V, Output>.onSelf() = on { it }
 
-class OneWayToSourceExpression<Data, Input, Output, V : View>(
-        val viewBinder: ViewBinder<Data, V, Output>,
-        val bindingExpression: BindingExpression<Output?, Input?>) {
+class OneWayToSourceExpression<Data, Input, Output, V : View>
+internal constructor(val viewBinder: ViewBinder<Data, V, Output>,
+                     val bindingExpression: BindingExpression<Output?, Input?>) {
 
     fun to(propertySetter: (Input?, V) -> Unit) = OneWayToSource(this, propertySetter)
 }
@@ -41,7 +41,8 @@ class OneWayToSourceExpression<Data, Input, Output, V : View>(
 fun <Data, Input, Output, V : View> OneWayToSourceExpression<Data, Input, Output, V>.to(observableField: ObservableField<Input>)
         = to { input, _ -> observableField.value = input ?: observableField.defaultValue }
 
-class OneWayToSource<Data, Input, Output, V : View>(
+class OneWayToSource<Data, Input, Output, V : View>
+internal constructor(
         val expression: OneWayToSourceExpression<Data, Input, Output, V>,
         val propertySetter: (Input?, V) -> Unit,
         val bindingExpression: BindingExpression<Output?, Input?> = expression.bindingExpression,
