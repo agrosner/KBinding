@@ -10,13 +10,13 @@ import kotlin.reflect.KProperty
  */
 class BindingHolder<V>(viewModel: V) {
 
-    private val bindings = mutableListOf<OneWayBinding<*, *, *, *>>()
-    private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<OneWayBinding<*, *, *, *>>>()
+    private val bindings = mutableListOf<OneWayBinding<V, *, *, *, *>>()
+    private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<OneWayBinding<V, *, *, *, *>>>()
 
-    private val twoWayBindings = mutableMapOf<ObservableField<*>, TwoWayBinding<*, *, *, *>>()
-    private val twoWayPropertyBindings = mutableMapOf<KProperty<*>, TwoWayBinding<*, *, *, *>>()
+    private val twoWayBindings = mutableMapOf<ObservableField<*>, TwoWayBinding<V, *, *, *, *>>()
+    private val twoWayPropertyBindings = mutableMapOf<KProperty<*>, TwoWayBinding<V, *, *, *, *>>()
 
-    private val sourceBindings = mutableMapOf<View, MutableList<OneWayToSource<*, *, *>>>()
+    private val sourceBindings = mutableMapOf<View, MutableList<OneWayToSource<V, *, *, *>>>()
 
     val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
@@ -31,57 +31,64 @@ class BindingHolder<V>(viewModel: V) {
             }
         }
 
-    fun <Input, Output> oneWay(oneWayBinding: OneWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {
-        bindings += oneWayBinding
-        oneWayBinding.bind()
-    }
+    fun <Input> bind(observableField: ObservableField<Input>) = ObservableBindingConverter(observableField, this)
 
-    fun <Input, Output> oneWay(kProperty: KProperty<*>, oneWayBinding: OneWayBinding<Input, Output, *, *>) {
-        var mutableList = propertyBindings[kProperty]
-        if (mutableList == null) {
-            mutableList = mutableListOf()
-            propertyBindings[kProperty] = mutableList
+    fun <Input> bind(kProperty: KProperty<*>, expression: (V) -> Input) = InputExpressionBindingConverter(kProperty, expression, this)
+
+    fun <Input> bindSelf(observableField: ObservableField<Input>) = bind(observableField).onSelf()
+
+    fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bind(kProperty, expression).onSelf()
+
+    fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = ViewBinder(v, viewRegister, this)
+
+    internal fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
+        if (oneWayBinding.converter is ObservableBindingConverter) {
+            bindings += oneWayBinding
+        } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
+            val kProperty = oneWayBinding.converter.property
+            var mutableList = propertyBindings[kProperty]
+            if (mutableList == null) {
+                mutableList = mutableListOf()
+                propertyBindings[kProperty] = mutableList
+            }
+            mutableList.add(oneWayBinding)
         }
-        mutableList.add(oneWayBinding)
-        oneWayBinding.bind()
     }
 
-    fun <Input, Output, V : View> oneWayToSource(oneWayToSource: OneWayToSource<Input, Output, V>) {
+    internal fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
+        val converter = twoWayBinding.oneWayBinding.converter
+        if (converter is ObservableBindingConverter) {
+            val observableField = converter.observableField
+            if (twoWayBindings.containsKey(observableField)) {
+                throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
+            }
+            twoWayBindings[observableField] = twoWayBinding
+        } else if (converter is InputExpressionBindingConverter) {
+            val key = converter.property
+            if (twoWayPropertyBindings.containsKey(key)) {
+                throw IllegalStateException("Cannot register more than one two way binding to property updates. This could result in a view update cycle.")
+            }
+            twoWayPropertyBindings[key] = twoWayBinding
+        }
+    }
+
+    internal fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
         val view = oneWayToSource.view
         var mutableList = sourceBindings[view]
         if (mutableList == null) {
             mutableList = mutableListOf()
             sourceBindings[view] = mutableList
         }
-        mutableList.add(oneWayToSource)
-        oneWayToSource.bind()
-    }
-
-    fun <Input, Output> twoWay(twoWayBinding: TwoWayBinding<Input, Output, ObservableBindingConverter<Input>, *>) {
-        val observableField = twoWayBinding.oneWayBinding.converter.observableField
-        if (twoWayBindings.containsKey(observableField)) {
-            throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
-        }
-        twoWayBindings[observableField] = twoWayBinding
-        twoWayBinding.bind()
-    }
-
-    fun <Input, Output> twoWay(kProperty: KProperty<*>, twoWayBinding: TwoWayBinding<Input, Output, *, *>) {
-        val key = kProperty
-        if (twoWayPropertyBindings.containsKey(key)) {
-            throw IllegalStateException("Cannot register more than one two way binding to property updates. This could result in a view update cycle.")
-        }
-        twoWayPropertyBindings[key] = twoWayBinding
-        twoWayBinding.bind()
+        mutableList?.add(oneWayToSource)
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <Output> twoWayBindingFor(kProperty: KProperty<*>)
-            = twoWayPropertyBindings.getOrElse(kProperty) { throw IllegalArgumentException("Could not find two way binding for $kProperty.") } as TwoWayBinding<*, Output, *, *>
+            = twoWayPropertyBindings.getOrElse(kProperty) { throw IllegalArgumentException("Could not find two way binding for $kProperty.") } as TwoWayBinding<V, *, Output, *, *>
 
     @Suppress("UNCHECKED_CAST")
     fun <Output> twoWayBindingFor(observableField: ObservableField<Output>)
-            = twoWayBindings.getOrElse(observableField, { throw IllegalArgumentException("Could not find two way binding for observable field.") }) as TwoWayBinding<ObservableField<Output>, Output, *, *>
+            = twoWayBindings.getOrElse(observableField, { throw IllegalArgumentException("Could not find two way binding for observable field.") }) as TwoWayBinding<V, ObservableField<Output>, Output, *, *>
 
     private fun onFieldChanged(property: KProperty<*>?) {
         if (property != null) {
@@ -101,14 +108,14 @@ class BindingHolder<V>(viewModel: V) {
             viewModel.addOnPropertyChangedCallback(onViewModelChanged)
         }
 
-        bindings.forEach { it.bind() }
+        bindings.forEach { it.bind(viewModel) }
 
-        sourceBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
+        sourceBindings.values.forEach { bindings -> bindings.forEach { it.bind(Unit) } }
 
-        propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
+        propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind(viewModel) } }
 
-        twoWayBindings.values.forEach { it.bind() }
-        twoWayPropertyBindings.values.forEach { it.bind() }
+        twoWayBindings.values.forEach { it.bind(viewModel) }
+        twoWayPropertyBindings.values.forEach { it.bind(viewModel) }
     }
 
 

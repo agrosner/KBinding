@@ -6,14 +6,13 @@ import com.andrewgrosner.okbinding.BaseObservable
 import com.andrewgrosner.okbinding.BindingHolder
 import java.util.*
 
-fun <Input, Output, Converter : BindingConverter<Input>, V : View>
-        OneWayBinding<Input, Output, Converter, V>.twoWay() = TwoWayBindingExpression(this)
+fun <Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
+        OneWayBinding<Data, Input, Output, Converter, V>.twoWay() = TwoWayBindingExpression(this)
 
-class TwoWayBindingExpression<Input, Output, Converter : BindingConverter<Input>, V : View>(
-        val oneWayBinding: OneWayBinding<Input, Output, Converter, V>) {
-    fun toInput(
-            viewRegister: ViewRegister<V, Output>,
-            inverseSetter: (InverseSetter<Output>)) = TwoWayBinding(this, viewRegister, inverseSetter)
+class TwoWayBindingExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>(
+        val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V>) {
+    fun toInput(viewRegister: ViewRegister<V, Output>, inverseSetter: (InverseSetter<Output>))
+            = TwoWayBinding(this, viewRegister, inverseSetter)
 }
 
 
@@ -22,12 +21,12 @@ private typealias InverseSetter<T> = (T?) -> Unit
 /**
  * Reverses the binding on a field to [View] and provides also [View] to Field support.
  */
-class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View>(
-        val twoWayBindingExpression: TwoWayBindingExpression<Input, Output, Converter, V>,
+class TwoWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>(
+        val twoWayBindingExpression: TwoWayBindingExpression<Data, Input, Output, Converter, V>,
         val viewRegister: ViewRegister<V, Output>,
         val inverseSetter: InverseSetter<Output>,
-        val oneWayBinding: OneWayBinding<Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
-    : Binding {
+        val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
+    : Binding<Data> {
 
     private val inverseSetters = mutableSetOf(inverseSetter)
 
@@ -38,7 +37,8 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
         inverseSetters += inverseSetter
     }
 
-    override fun bind() {
+    override fun bind(data: Data) {
+        oneWayBinding.converter.component.registerBinding(this)
         viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
         oneWayBinding.notifyValueChange() // trigger value change on bind to respect value of ViewModel over view.
     }
@@ -75,8 +75,8 @@ class TwoWayBinding<Input, Output, Converter : BindingConverter<Input>, V : View
  * Changes from either the view or the field are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
-fun TwoWayBindingExpression<String, String,
-        ObservableBindingConverter<String>, TextView>.toFieldFromText(
+fun <Data> TwoWayBindingExpression<Data, String, String,
+        ObservableBindingConverter<Data, String>, TextView>.toFieldFromText(
         inverseSetter: InverseSetter<String?> = {
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
@@ -90,8 +90,8 @@ fun TwoWayBindingExpression<String, String,
  *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
  *  Otherwise the view in this binding will not receive updates and two way binding will not work.
  */
-fun TwoWayBindingExpression<String, String,
-        BindingConverter<String>, TextView>.toExprFromText(
+fun <Data> TwoWayBindingExpression<Data, String, String,
+        BindingConverter<Data, String>, TextView>.toExprFromText(
         inverseSetter: InverseSetter<String?>)
         = toInput(OnTextChangedRegister(), inverseSetter)
 
@@ -100,7 +100,7 @@ fun TwoWayBindingExpression<String, String,
  * Changes from either the view or the field expression are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
-fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean>, CompoundButton>.toFieldFromCompound(
+fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean, ObservableBindingConverter<Data, Boolean>, CompoundButton>.toFieldFromCompound(
         inverseSetter: InverseSetter<Boolean> = {
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
@@ -114,8 +114,8 @@ fun TwoWayBindingExpression<Boolean, Boolean, ObservableBindingConverter<Boolean
  *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
  *  Otherwise the view in this binding will not receive updates and two way binding will not work.
  */
-fun TwoWayBindingExpression<Boolean, Boolean,
-        BindingConverter<Boolean>, CompoundButton>.toExprFromCompound(
+fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean,
+        BindingConverter<Data, Boolean>, CompoundButton>.toExprFromCompound(
         inverseSetter: InverseSetter<Boolean>)
         = toInput(OnCheckedChangeRegister(), inverseSetter)
 
@@ -125,7 +125,7 @@ fun TwoWayBindingExpression<Boolean, Boolean,
  * Changes from either the view or the field expression are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
-fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, DatePicker>.toFieldFromDate(
+fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingConverter<Data, Calendar>, DatePicker>.toFieldFromDate(
         inverseSetter: InverseSetter<Calendar> = {
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
@@ -139,8 +139,8 @@ fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calen
  *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
  *  Otherwise the view in this binding will not receive updates and two way binding will not work.
  */
-fun TwoWayBindingExpression<Calendar, Calendar,
-        BindingConverter<Calendar>, DatePicker>.toExprFromDate(
+fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
+        BindingConverter<Data, Calendar>, DatePicker>.toExprFromDate(
         inverseSetter: InverseSetter<Calendar>)
         = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
 
@@ -149,7 +149,7 @@ fun TwoWayBindingExpression<Calendar, Calendar,
  * Changes from either the view or the field expression are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
-fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calendar>, TimePicker>.toFieldFromTime(
+fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingConverter<Data, Calendar>, TimePicker>.toFieldFromTime(
         inverseSetter: InverseSetter<Calendar> = {
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
@@ -163,8 +163,8 @@ fun TwoWayBindingExpression<Calendar, Calendar, ObservableBindingConverter<Calen
  *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
  *  Otherwise the view in this binding will not receive updates and two way binding will not work.
  */
-fun TwoWayBindingExpression<Calendar, Calendar,
-        BindingConverter<Calendar>, TimePicker>.toExprFromTime(
+fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
+        BindingConverter<Data, Calendar>, TimePicker>.toExprFromTime(
         inverseSetter: InverseSetter<Calendar>)
         = toInput(OnTimeChangedRegister(), inverseSetter)
 
@@ -173,7 +173,7 @@ fun TwoWayBindingExpression<Calendar, Calendar,
  * Changes from either the view or the field expression are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
-fun TwoWayBindingExpression<Float, Float, ObservableBindingConverter<Float>, RatingBar>.toFieldFromRating(
+fun <Data> TwoWayBindingExpression<Data, Float, Float, ObservableBindingConverter<Data, Float>, RatingBar>.toFieldFromRating(
         inverseSetter: InverseSetter<Float> = {
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
@@ -187,8 +187,8 @@ fun TwoWayBindingExpression<Float, Float, ObservableBindingConverter<Float>, Rat
  *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
  *  Otherwise the view in this binding will not receive updates and two way binding will not work.
  */
-fun TwoWayBindingExpression<Float, Float,
-        BindingConverter<Float>, RatingBar>.toExprFromRating(
+fun <Data> TwoWayBindingExpression<Data, Float, Float,
+        BindingConverter<Data, Float>, RatingBar>.toExprFromRating(
         inverseSetter: InverseSetter<Float>)
         = toInput(OnRatingBarChangedRegister(), inverseSetter)
 
@@ -197,7 +197,7 @@ fun TwoWayBindingExpression<Float, Float,
  * Changes from either the view or the field expression are synchronized between each instance.
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
-fun TwoWayBindingExpression<Int, Int, ObservableBindingConverter<Int>, SeekBar>.toFieldFromSeekBar(
+fun <Data> TwoWayBindingExpression<Data, Int, Int, ObservableBindingConverter<Data, Int>, SeekBar>.toFieldFromSeekBar(
         inverseSetter: InverseSetter<Int> = {
             val observableField = oneWayBinding.oneWayExpression.converter.observableField
             observableField.value = it ?: observableField.defaultValue
@@ -211,7 +211,7 @@ fun TwoWayBindingExpression<Int, Int, ObservableBindingConverter<Int>, SeekBar>.
  *  The [inverseSetter] should mutate a property that is observed by the parent ViewModel registered in the [BindingHolder].
  *  Otherwise the view in this binding will not receive updates and two way binding will not work.
  */
-fun TwoWayBindingExpression<Int, Int,
-        BindingConverter<Int>, SeekBar>.toExprFromSeekBar(
+fun <Data> TwoWayBindingExpression<Data, Int, Int,
+        BindingConverter<Data, Int>, SeekBar>.toExprFromSeekBar(
         inverseSetter: InverseSetter<Int>)
         = toInput(OnSeekBarChangedRegister(), inverseSetter)

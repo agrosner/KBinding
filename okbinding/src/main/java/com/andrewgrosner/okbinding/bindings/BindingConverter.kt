@@ -1,38 +1,35 @@
 package com.andrewgrosner.okbinding.bindings
 
+import com.andrewgrosner.okbinding.BindingHolder
 import com.andrewgrosner.okbinding.Observable
 import com.andrewgrosner.okbinding.ObservableField
 import kotlin.reflect.KProperty
 
 
-interface BindingConverter<out Input> {
-    fun convertValue(): Input
+interface BindingConverter<Data, out Input> {
 
-    fun bind(binding: Binding) {}
-    fun unbind(binding: Binding) {}
+    val component: BindingHolder<Data>
+
+    fun convertValue(data: Data): Input
+
+    fun bind(binding: Binding<Data>) {}
+    fun unbind(binding: Binding<Data>) {}
 }
 
-fun <Input> bind(observableField: ObservableField<Input>) = ObservableBindingConverter(observableField)
+class ObservableBindingConverter<Data, Input>(val observableField: ObservableField<Input>,
+                                              override val component: BindingHolder<Data>)
+    : BindingConverter<Data, Input> {
 
-fun <Input> bind(expression: () -> Input) = InputExpressionBindingConverter(expression)
+    private var oneWayBinding: Binding<Data>? = null
 
-fun <Input> bindSelf(observableField: ObservableField<Input>) = bind(observableField).onSelf()
+    override fun convertValue(data: Data) = observableField.value
 
-fun <Input> bindSelf(expression: () -> Input) = bind(expression).onSelf()
-
-class ObservableBindingConverter<Input>(val observableField: ObservableField<Input>)
-    : BindingConverter<Input> {
-
-    private var oneWayBinding: Binding? = null
-
-    override fun convertValue() = observableField.value
-
-    override fun bind(binding: Binding) {
+    override fun bind(binding: Binding<Data>) {
         this.oneWayBinding = binding
         observableField.addOnPropertyChangedCallback(this::propertyChanged)
     }
 
-    override fun unbind(binding: Binding) {
+    override fun unbind(binding: Binding<Data>) {
         observableField.removeOnPropertyChangedCallback(this::propertyChanged)
         this.oneWayBinding = null
     }
@@ -42,6 +39,8 @@ class ObservableBindingConverter<Input>(val observableField: ObservableField<Inp
     }
 }
 
-class InputExpressionBindingConverter<Input>(val expression: () -> Input) : BindingConverter<Input> {
-    override fun convertValue() = expression()
+class InputExpressionBindingConverter<Data, Input>(val property: KProperty<*>,
+                                                   val expression: (Data) -> Input,
+                                                   override val component: BindingHolder<Data>) : BindingConverter<Data, Input> {
+    override fun convertValue(data: Data) = expression(data)
 }
