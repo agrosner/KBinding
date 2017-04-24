@@ -337,7 +337,7 @@ To register a `twoWay` binding on an `ObservableField` that relates to a user in
 
 ```kotlin
 editText {
-  bindSelf(viewModel.address).toText(this)
+  bindSelf { viewModel.address }.toText(this)
           .twoWay().toFieldFromText()
 }
 ```

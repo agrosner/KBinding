@@ -11,12 +11,12 @@ fun <Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
 
 class TwoWayBindingExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>(
         val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V>) {
-    fun toInput(viewRegister: ViewRegister<V, Output>, inverseSetter: (InverseSetter<Output>))
+    fun toInput(viewRegister: ViewRegister<V, Output>, inverseSetter: (InverseSetter<Data, Output>))
             = TwoWayBinding(this, viewRegister, inverseSetter)
 }
 
 
-private typealias InverseSetter<T> = (T?) -> Unit
+private typealias InverseSetter<Data, T> = (Data?, T?) -> Unit
 
 /**
  * Reverses the binding on a field to [View] and provides also [View] to Field support.
@@ -25,15 +25,16 @@ class TwoWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
 internal constructor(
         val twoWayBindingExpression: TwoWayBindingExpression<Data, Input, Output, Converter, V>,
         val viewRegister: ViewRegister<V, Output>,
-        inverseSetter: InverseSetter<Output>,
+        inverseSetter: InverseSetter<Data, Output>,
         val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
     : Binding<Data> {
 
     private val inverseSetters = mutableSetOf(inverseSetter)
 
-    init {
-        val component = oneWayBinding.converter.component
+    private val component
+        get() = oneWayBinding.converter.component
 
+    init {
         // unregister previously one way binding to ensure we don't duplicate
         component.unregisterBinding(oneWayBinding)
         component.registerBinding(this)
@@ -42,7 +43,7 @@ internal constructor(
     /**
      * Appends another expression that gets called with the value of the view whenever the view itself changes.
      */
-    fun onExpression(inverseSetter: InverseSetter<Output>) = apply {
+    fun onExpression(inverseSetter: InverseSetter<Data?, Output>) = apply {
         inverseSetters += inverseSetter
     }
 
@@ -55,7 +56,7 @@ internal constructor(
     override fun unbind() {
         oneWayBinding.unbind()
         viewRegister.deregister(oneWayBinding.view!!)
-        oneWayBinding.converter.component.unregisterBinding(this)
+        component.unregisterBinding(this)
     }
 
     internal fun unbindInternal() {
@@ -74,7 +75,7 @@ internal constructor(
      * When view changes, call our binding expression again.
      */
     fun notifyViewChanged(value: Output?) {
-        inverseSetters.forEach { it.invoke(value) }
+        inverseSetters.forEach { it.invoke(component.viewModel, value) }
     }
 
     /**
@@ -92,9 +93,9 @@ internal constructor(
  */
 fun <Data> TwoWayBindingExpression<Data, String, String,
         ObservableBindingConverter<Data, String>, TextView>.toFieldFromText(
-        inverseSetter: InverseSetter<String?> = {
+        inverseSetter: InverseSetter<Data, String?> = { _, input ->
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
-                observableField.value = it ?: observableField.defaultValue
+                observableField.value = input ?: observableField.defaultValue
             }
         })
         = toInput(OnTextChangedRegister(), inverseSetter)
@@ -108,7 +109,7 @@ fun <Data> TwoWayBindingExpression<Data, String, String,
  */
 fun <Data> TwoWayBindingExpression<Data, String, String,
         BindingConverter<Data, String>, TextView>.toExprFromText(
-        inverseSetter: InverseSetter<String?>)
+        inverseSetter: InverseSetter<Data, String?>)
         = toInput(OnTextChangedRegister(), inverseSetter)
 
 /**
@@ -117,9 +118,9 @@ fun <Data> TwoWayBindingExpression<Data, String, String,
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
 fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean, ObservableBindingConverter<Data, Boolean>, CompoundButton>.toFieldFromCompound(
-        inverseSetter: InverseSetter<Boolean> = {
+        inverseSetter: InverseSetter<Data, Boolean> = { _, input ->
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
-                observableField.value = it ?: observableField.defaultValue
+                observableField.value = input ?: observableField.defaultValue
             }
         })
         = toInput(OnCheckedChangeRegister(), inverseSetter)
@@ -133,7 +134,7 @@ fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean, ObservableBindingConv
  */
 fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean,
         BindingConverter<Data, Boolean>, CompoundButton>.toExprFromCompound(
-        inverseSetter: InverseSetter<Boolean>)
+        inverseSetter: InverseSetter<Data, Boolean>)
         = toInput(OnCheckedChangeRegister(), inverseSetter)
 
 
@@ -143,9 +144,9 @@ fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean,
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingConverter<Data, Calendar>, DatePicker>.toFieldFromDate(
-        inverseSetter: InverseSetter<Calendar> = {
+        inverseSetter: InverseSetter<Data, Calendar> = { _, input ->
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
-                observableField.value = it ?: observableField.defaultValue
+                observableField.value = input ?: observableField.defaultValue
             }
         })
         = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
@@ -159,7 +160,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
         BindingConverter<Data, Calendar>, DatePicker>.toExprFromDate(
-        inverseSetter: InverseSetter<Calendar>)
+        inverseSetter: InverseSetter<Data, Calendar>)
         = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
 
 /**
@@ -168,9 +169,9 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingConverter<Data, Calendar>, TimePicker>.toFieldFromTime(
-        inverseSetter: InverseSetter<Calendar> = {
+        inverseSetter: InverseSetter<Data, Calendar> = { _, input ->
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
-                observableField.value = it ?: observableField.defaultValue
+                observableField.value = input ?: observableField.defaultValue
             }
         })
         = toInput(OnTimeChangedRegister(), inverseSetter)
@@ -184,7 +185,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
         BindingConverter<Data, Calendar>, TimePicker>.toExprFromTime(
-        inverseSetter: InverseSetter<Calendar>)
+        inverseSetter: InverseSetter<Data, Calendar>)
         = toInput(OnTimeChangedRegister(), inverseSetter)
 
 /**
@@ -193,9 +194,9 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
 fun <Data> TwoWayBindingExpression<Data, Float, Float, ObservableBindingConverter<Data, Float>, RatingBar>.toFieldFromRating(
-        inverseSetter: InverseSetter<Float> = {
+        inverseSetter: InverseSetter<Data, Float> = { _, input ->
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
-                observableField.value = it ?: observableField.defaultValue
+                observableField.value = input ?: observableField.defaultValue
             }
         })
         = toInput(OnRatingBarChangedRegister(), inverseSetter)
@@ -209,7 +210,7 @@ fun <Data> TwoWayBindingExpression<Data, Float, Float, ObservableBindingConverte
  */
 fun <Data> TwoWayBindingExpression<Data, Float, Float,
         BindingConverter<Data, Float>, RatingBar>.toExprFromRating(
-        inverseSetter: InverseSetter<Float>)
+        inverseSetter: InverseSetter<Data, Float>)
         = toInput(OnRatingBarChangedRegister(), inverseSetter)
 
 /**
@@ -218,9 +219,9 @@ fun <Data> TwoWayBindingExpression<Data, Float, Float,
  *  The [inverseSetter] (optional) receives values from the view. Here you should update the observable property tied to the beginning of the binding.
  */
 fun <Data> TwoWayBindingExpression<Data, Int, Int, ObservableBindingConverter<Data, Int>, SeekBar>.toFieldFromSeekBar(
-        inverseSetter: InverseSetter<Int> = {
+        inverseSetter: InverseSetter<Data, Int> = { _, input ->
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
-                observableField.value = it ?: observableField.defaultValue
+                observableField.value = input ?: observableField.defaultValue
             }
         })
         = toInput(OnSeekBarChangedRegister(), inverseSetter)
@@ -234,5 +235,5 @@ fun <Data> TwoWayBindingExpression<Data, Int, Int, ObservableBindingConverter<Da
  */
 fun <Data> TwoWayBindingExpression<Data, Int, Int,
         BindingConverter<Data, Int>, SeekBar>.toExprFromSeekBar(
-        inverseSetter: InverseSetter<Int>)
+        inverseSetter: InverseSetter<Data, Int>)
         = toInput(OnSeekBarChangedRegister(), inverseSetter)

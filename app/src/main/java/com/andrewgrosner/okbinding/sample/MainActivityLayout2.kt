@@ -66,8 +66,8 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                 switch {
                     bindSelf { it.selected }.toOnCheckedChange(this)
-                            .twoWay().toFieldFromCompound().onExpression {
-                        text = if (it ?: false) "On" else "Off"
+                            .twoWay().toFieldFromCompound().onExpression { _, input ->
+                        text = if (input ?: false) "On" else "Off"
                     }
                 }
 
