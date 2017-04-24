@@ -1,6 +1,6 @@
 # KBinding
 
-KBinding is a library for [Anko](https://github.com/Kotlin/anko) to enable databinding in a fluent, easy to understand syntax.
+KBinding is a Kotlin databinding library best used with [Anko](https://github.com/Kotlin/anko) to enable databinding in a fluent, easy to understand syntax.
 
 ```kotlin
 
@@ -59,8 +59,12 @@ allProjects {
 ```
 
 ```gradle
-compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used
-compile 'com.github.agrosner:KBinding:1.0.0-beta2' // version of KBinding
+
+compile 'com.github.agrosner.kbinding:kbinding:1.0.0-beta2' // version of KBinding
+compile
+
+// to use with Anko
+compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used 'com.github.agrosner.KBinding:kbinding-anko:1.0.0-beta2'
 ```
 
 ## Getting Started
