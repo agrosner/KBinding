@@ -93,8 +93,9 @@ internal constructor(
 fun <Data> TwoWayBindingExpression<Data, String, String,
         ObservableBindingConverter<Data, String>, TextView>.toFieldFromText(
         inverseSetter: InverseSetter<String?> = {
-            val observableField = oneWayBinding.oneWayExpression.converter.observableField
-            observableField.value = it ?: observableField.defaultValue
+            oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
+                observableField.value = it ?: observableField.defaultValue
+            }
         })
         = toInput(OnTextChangedRegister(), inverseSetter)
 
@@ -117,8 +118,9 @@ fun <Data> TwoWayBindingExpression<Data, String, String,
  */
 fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean, ObservableBindingConverter<Data, Boolean>, CompoundButton>.toFieldFromCompound(
         inverseSetter: InverseSetter<Boolean> = {
-            val observableField = oneWayBinding.oneWayExpression.converter.observableField
-            observableField.value = it ?: observableField.defaultValue
+            oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
+                observableField.value = it ?: observableField.defaultValue
+            }
         })
         = toInput(OnCheckedChangeRegister(), inverseSetter)
 
@@ -142,8 +144,9 @@ fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean,
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingConverter<Data, Calendar>, DatePicker>.toFieldFromDate(
         inverseSetter: InverseSetter<Calendar> = {
-            val observableField = oneWayBinding.oneWayExpression.converter.observableField
-            observableField.value = it ?: observableField.defaultValue
+            oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
+                observableField.value = it ?: observableField.defaultValue
+            }
         })
         = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
 
@@ -166,8 +169,9 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingConverter<Data, Calendar>, TimePicker>.toFieldFromTime(
         inverseSetter: InverseSetter<Calendar> = {
-            val observableField = oneWayBinding.oneWayExpression.converter.observableField
-            observableField.value = it ?: observableField.defaultValue
+            oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
+                observableField.value = it ?: observableField.defaultValue
+            }
         })
         = toInput(OnTimeChangedRegister(), inverseSetter)
 
@@ -190,8 +194,9 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
  */
 fun <Data> TwoWayBindingExpression<Data, Float, Float, ObservableBindingConverter<Data, Float>, RatingBar>.toFieldFromRating(
         inverseSetter: InverseSetter<Float> = {
-            val observableField = oneWayBinding.oneWayExpression.converter.observableField
-            observableField.value = it ?: observableField.defaultValue
+            oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
+                observableField.value = it ?: observableField.defaultValue
+            }
         })
         = toInput(OnRatingBarChangedRegister(), inverseSetter)
 
@@ -214,8 +219,9 @@ fun <Data> TwoWayBindingExpression<Data, Float, Float,
  */
 fun <Data> TwoWayBindingExpression<Data, Int, Int, ObservableBindingConverter<Data, Int>, SeekBar>.toFieldFromSeekBar(
         inverseSetter: InverseSetter<Int> = {
-            val observableField = oneWayBinding.oneWayExpression.converter.observableField
-            observableField.value = it ?: observableField.defaultValue
+            oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
+                observableField.value = it ?: observableField.defaultValue
+            }
         })
         = toInput(OnSeekBarChangedRegister(), inverseSetter)
 

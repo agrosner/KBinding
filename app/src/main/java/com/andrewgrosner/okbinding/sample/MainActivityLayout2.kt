@@ -79,6 +79,11 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                     bindSelf { it.currentTime }.toDatePicker(this)
                             .twoWay().toFieldFromDate()
                 }
+
+                button {
+                    text = "Set Null"
+                    onClick { viewModel = null }
+                }
             }.lparams {
                 horizontalMargin = dip(8)
             }

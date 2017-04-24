@@ -22,18 +22,21 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
 
     private var oneWayBinding: Binding<Data>? = null
 
-    val observableField
-        get() = function(component.viewModel!!)
+    val observableField: ObservableField<Input>?
+        get() {
+            val viewModel = component.viewModel
+            return if (viewModel != null) function(viewModel) else null
+        }
 
-    override fun convertValue(data: Data) = observableField.value
+    override fun convertValue(data: Data) = observableField!!.value
 
     override fun bind(binding: Binding<Data>) {
         this.oneWayBinding = binding
-        observableField.addOnPropertyChangedCallback(this::propertyChanged)
+        observableField?.addOnPropertyChangedCallback(this::propertyChanged)
     }
 
     override fun unbind(binding: Binding<Data>) {
-        observableField.removeOnPropertyChangedCallback(this::propertyChanged)
+        observableField?.removeOnPropertyChangedCallback(this::propertyChanged)
         this.oneWayBinding = null
     }
 

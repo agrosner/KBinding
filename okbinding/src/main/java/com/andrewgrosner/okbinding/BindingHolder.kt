@@ -45,12 +45,14 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     private val bindings = mutableListOf<OneWayBinding<V, *, *, *, *>>()
     private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<OneWayBinding<V, *, *, *, *>>>()
 
-    private val twoWayBindings = mutableMapOf<ObservableField<*>, TwoWayBinding<V, *, *, *, *>>()
+    private val twoWayBindings = mutableListOf<TwoWayBinding<V, *, *, *, *>>()
     private val twoWayPropertyBindings = mutableMapOf<KProperty<*>, TwoWayBinding<V, *, *, *, *>>()
 
     private val sourceBindings = mutableMapOf<View, MutableList<OneWayToSource<V, *, *, *>>>()
 
     val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
+
+    private var isBound = false
 
     override var viewModel: V? = viewModel
         set(value) {
@@ -60,6 +62,8 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
                     (field as Observable).removeOnPropertyChangedCallback(onViewModelChanged)
                 }
                 field = value
+
+                if (isBound) bindAll()
             }
         }
 
@@ -89,11 +93,10 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     override fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
-            val observableField = converter.observableField
-            if (twoWayBindings.containsKey(observableField)) {
+            if (twoWayBindings.contains(twoWayBinding)) {
                 throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
             }
-            twoWayBindings[observableField] = twoWayBinding
+            twoWayBindings += twoWayBinding
         } else if (converter is InputExpressionBindingConverter) {
             val key = converter.property
             if (twoWayPropertyBindings.containsKey(key)) {
@@ -106,8 +109,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     override fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
-            val observableField = converter.observableField
-            twoWayBindings -= observableField
+            twoWayBindings -= twoWayBinding
         } else if (converter is InputExpressionBindingConverter) {
             val key = converter.property
             twoWayPropertyBindings -= key
@@ -153,8 +155,10 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
 
         propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
 
-        twoWayBindings.values.forEach { it.bind() }
+        twoWayBindings.forEach { it.bind() }
         twoWayPropertyBindings.values.forEach { it.bind() }
+
+        isBound = true
     }
 
     override fun unbindAll() {
@@ -171,9 +175,11 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
         propertyBindings.values.forEach { bindings -> bindings.forEach { it.unbindInternal() } }
         propertyBindings.clear()
 
-        twoWayBindings.values.forEach { it.unbindInternal() }
+        twoWayBindings.forEach { it.unbindInternal() }
         twoWayBindings.clear()
         twoWayPropertyBindings.values.forEach { it.unbindInternal() }
         twoWayPropertyBindings.clear()
+
+        isBound = false
     }
 }
