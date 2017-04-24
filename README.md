@@ -61,10 +61,10 @@ allProjects {
 ```gradle
 
 compile 'com.github.agrosner.kbinding:kbinding:1.0.0-beta2' // version of KBinding
-compile
 
 // to use with Anko
-compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used 'com.github.agrosner.KBinding:kbinding-anko:1.0.0-beta2'
+compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used
+compile 'com.github.agrosner.KBinding:kbinding-anko:1.0.0-beta2'
 ```
 
 ## Getting Started
