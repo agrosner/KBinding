@@ -7,11 +7,11 @@ import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
 
-interface Binding<in Data> {
+interface Binding<Data> {
 
     fun notifyValueChange()
 
-    fun bind(data: Data)
+    fun bind()
 
     fun unbind()
 }
@@ -46,8 +46,8 @@ fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBin
 
 class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>
 internal constructor(val converter: Converter,
-                     val expression: BindingExpression<Input, Output>) {
-    fun <V : View> toView(view: V, viewExpression: (V, Output) -> Unit)
+                     val expression: BindingExpression<Input, Output?>) {
+    fun <V : View> toView(view: V, viewExpression: (V, Output?) -> Unit)
             = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
 
 }
@@ -56,22 +56,22 @@ class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
 internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output, Converter>,
                      val converter: Converter = oneWayExpression.converter) : Binding<Data> {
 
-    var viewExpression: ((V, Output) -> Unit)? = null
+    var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
 
-    var data: Data? = null
-
-    fun convert() = oneWayExpression.expression(converter.convertValue(data))
+    fun convert(): Output? {
+        val data = converter.component.viewModel
+        return if (data != null) oneWayExpression.expression(converter.convertValue(data)) else null
+    }
 
     @Suppress("UNCHECKED_CAST")
-    fun toView(view: V, viewExpression: ((V, Output) -> Unit)) = apply {
+    fun toView(view: V, viewExpression: ((V, Output?) -> Unit)) = apply {
         this.viewExpression = viewExpression
         this.view = view
         converter.component.registerBinding(this)
     }
 
-    override fun bind(data: Data) {
-        this.data = data
+    override fun bind() {
         notifyValueChange()
         converter.bind(this)
     }
@@ -113,7 +113,7 @@ infix fun <Input, TBinding : BindingConverter<*, Input>>
  */
 infix fun <Input, TBinding : BindingConverter<*, Input>>
         OneWayExpression<*, Input, Boolean, TBinding>.toViewVisibilityB(textView: View)
-        = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value) View.VISIBLE else View.GONE) })
+        = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value != null && value) View.VISIBLE else View.GONE) })
 
 /**
  * Immediately binds the [TextView] to the value of this binding. Subsequent changes are handled by

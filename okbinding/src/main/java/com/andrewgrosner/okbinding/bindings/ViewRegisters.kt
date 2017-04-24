@@ -72,8 +72,10 @@ class OnCheckedChangeRegister : ViewRegister<CompoundButton, Boolean>(), Compoun
     override fun getValue(view: CompoundButton) = view.isChecked
 }
 
-class OnDateChangedRegister(private val initialValue: Calendar) : ViewRegister<DatePicker, Calendar>(),
+class OnDateChangedRegister(initialValue: Calendar? = null) : ViewRegister<DatePicker, Calendar>(),
         OnDateChangedListener {
+
+    private val initialValue = initialValue ?: getInstance().apply { timeInMillis = 0 }
 
     private class WeakOnDateChangedListener(self: OnDateChangedListener) : OnDateChangedListener {
 

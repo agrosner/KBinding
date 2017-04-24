@@ -4,8 +4,8 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.View
 
-fun View.setVisibilityIfNeeded(visibility: Int) {
-    if (this.visibility != visibility) {
+fun View.setVisibilityIfNeeded(visibility: Int?) {
+    if (visibility != null && this.visibility != visibility) {
         this.visibility = visibility
     }
 }

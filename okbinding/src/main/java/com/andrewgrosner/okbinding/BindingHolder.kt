@@ -4,11 +4,43 @@ import android.view.View
 import com.andrewgrosner.okbinding.bindings.*
 import kotlin.reflect.KProperty
 
+
+interface BindingRegister<V> {
+
+    fun <Input> bind(function: (V) -> ObservableField<Input>) = ObservableBindingConverter(function, this)
+
+    fun <Input> bind(kProperty: KProperty<*>, expression: (V) -> Input) = InputExpressionBindingConverter(kProperty, expression, this)
+
+    fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = bind(function).onSelf()
+
+    fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bind(kProperty, expression).onSelf()
+
+    fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = ViewBinder(v, viewRegister, this)
+
+    var viewModel: V?
+
+    fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>)
+
+    fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>)
+
+    fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>)
+
+    fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>)
+
+    fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>)
+
+    fun unregisterBinding(oneWayToSource: OneWayToSource<V, *, *, *>)
+
+    fun bindAll()
+
+    fun unbindAll()
+}
+
 /**
  * Represents a set of [Binding]. Provides convenience operations and handles changes from the parent
  * [viewModel] if it is an [Observable].
  */
-class BindingHolder<V>(viewModel: V) {
+class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
 
     private val bindings = mutableListOf<OneWayBinding<V, *, *, *, *>>()
     private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<OneWayBinding<V, *, *, *, *>>>()
@@ -20,7 +52,7 @@ class BindingHolder<V>(viewModel: V) {
 
     val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
-    var viewModel: V = viewModel
+    override var viewModel: V? = viewModel
         set(value) {
             if (field != value) {
                 // existing field remove property changes
@@ -31,17 +63,7 @@ class BindingHolder<V>(viewModel: V) {
             }
         }
 
-    fun <Input> bind(observableField: ObservableField<Input>) = ObservableBindingConverter(observableField, this)
-
-    fun <Input> bind(kProperty: KProperty<*>, expression: (V) -> Input) = InputExpressionBindingConverter(kProperty, expression, this)
-
-    fun <Input> bindSelf(observableField: ObservableField<Input>) = bind(observableField).onSelf()
-
-    fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bind(kProperty, expression).onSelf()
-
-    fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = ViewBinder(v, viewRegister, this)
-
-    internal fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
+    override fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
             bindings += oneWayBinding
         } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
@@ -55,7 +77,7 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    internal fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
+    override fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
             bindings -= oneWayBinding
         } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
@@ -64,7 +86,7 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    internal fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
+    override fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
             val observableField = converter.observableField
@@ -81,7 +103,7 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    internal fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
+    override fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
             val observableField = converter.observableField
@@ -92,7 +114,7 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    internal fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
+    override fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
         val view = oneWayToSource.view
         var mutableList = sourceBindings[view]
         if (mutableList == null) {
@@ -102,18 +124,10 @@ class BindingHolder<V>(viewModel: V) {
         mutableList.add(oneWayToSource)
     }
 
-    internal fun unregisterBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
+    override fun unregisterBinding(oneWayToSource: OneWayToSource<V, *, *, *>) {
         val view = oneWayToSource.view
         sourceBindings[view]?.remove(oneWayToSource)
     }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <Output> twoWayBindingFor(kProperty: KProperty<*>)
-            = twoWayPropertyBindings.getOrElse(kProperty) { throw IllegalArgumentException("Could not find two way binding for $kProperty.") } as TwoWayBinding<V, *, Output, *, *>
-
-    @Suppress("UNCHECKED_CAST")
-    fun <Output> twoWayBindingFor(observableField: ObservableField<Output>)
-            = twoWayBindings.getOrElse(observableField, { throw IllegalArgumentException("Could not find two way binding for observable field.") }) as TwoWayBinding<V, ObservableField<Output>, Output, *, *>
 
     private fun onFieldChanged(property: KProperty<*>?) {
         if (property != null) {
@@ -126,25 +140,24 @@ class BindingHolder<V>(viewModel: V) {
         }
     }
 
-    fun bindAll() {
+    override fun bindAll() {
         // new field is observable, register now for changes
         val viewModel = this.viewModel
         if (viewModel is Observable) {
             viewModel.addOnPropertyChangedCallback(onViewModelChanged)
         }
 
-        bindings.forEach { it.bind(viewModel) }
+        bindings.forEach { it.bind() }
 
-        sourceBindings.values.forEach { bindings -> bindings.forEach { it.bind(Unit) } }
+        sourceBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
 
-        propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind(viewModel) } }
+        propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
 
-        twoWayBindings.values.forEach { it.bind(viewModel) }
-        twoWayPropertyBindings.values.forEach { it.bind(viewModel) }
+        twoWayBindings.values.forEach { it.bind() }
+        twoWayPropertyBindings.values.forEach { it.bind() }
     }
 
-
-    fun unbindAll() {
+    override fun unbindAll() {
         val viewModel = viewModel
         if (viewModel is Observable) {
             viewModel.removeOnPropertyChangedCallback(onViewModelChanged)

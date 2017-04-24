@@ -1,6 +1,6 @@
 package com.andrewgrosner.okbinding.bindings
 
-import com.andrewgrosner.okbinding.BindingHolder
+import com.andrewgrosner.okbinding.BindingRegister
 import com.andrewgrosner.okbinding.Observable
 import com.andrewgrosner.okbinding.ObservableField
 import kotlin.reflect.KProperty
@@ -8,21 +8,24 @@ import kotlin.reflect.KProperty
 
 interface BindingConverter<Data, out Input> {
 
-    val component: BindingHolder<Data>
+    val component: BindingRegister<Data>
 
-    fun convertValue(data: Data?): Input
+    fun convertValue(data: Data): Input
 
     fun bind(binding: Binding<Data>) {}
     fun unbind(binding: Binding<Data>) {}
 }
 
-class ObservableBindingConverter<Data, Input>(val observableField: ObservableField<Input>,
-                                              override val component: BindingHolder<Data>)
+class ObservableBindingConverter<Data, Input>(val function: (Data) -> ObservableField<Input>,
+                                              override val component: BindingRegister<Data>)
     : BindingConverter<Data, Input> {
 
     private var oneWayBinding: Binding<Data>? = null
 
-    override fun convertValue(data: Data?) = observableField.value
+    val observableField
+        get() = function(component.viewModel!!)
+
+    override fun convertValue(data: Data) = observableField.value
 
     override fun bind(binding: Binding<Data>) {
         this.oneWayBinding = binding
@@ -41,9 +44,6 @@ class ObservableBindingConverter<Data, Input>(val observableField: ObservableFie
 
 class InputExpressionBindingConverter<Data, Input>(val property: KProperty<*>,
                                                    val expression: (Data) -> Input,
-                                                   override val component: BindingHolder<Data>) : BindingConverter<Data, Input> {
-    override fun convertValue(data: Data?) = when {
-        data != null -> expression(data)
-        else -> throw IllegalStateException("Ensure you bind the binding before accessing this method.")
-    }
+                                                   override val component: BindingRegister<Data>) : BindingConverter<Data, Input> {
+    override fun convertValue(data: Data) = expression(data)
 }

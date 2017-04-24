@@ -46,8 +46,8 @@ internal constructor(
         inverseSetters += inverseSetter
     }
 
-    override fun bind(data: Data) {
-        oneWayBinding.bind(data)
+    override fun bind() {
+        oneWayBinding.bind()
         viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
         oneWayBinding.notifyValueChange() // trigger value change on bind to respect value of ViewModel over view.
     }

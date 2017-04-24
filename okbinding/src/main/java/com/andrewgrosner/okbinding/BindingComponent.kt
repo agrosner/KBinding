@@ -6,11 +6,10 @@ import org.jetbrains.anko.AnkoComponent
 import org.jetbrains.anko.AnkoContext
 import kotlin.reflect.KProperty
 
-abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
+abstract class BindingComponent<T, V>(viewModel: V, val bindingHolder: BindingRegister<V> = BindingHolder(viewModel))
+    : AnkoComponent<T> {
 
-    val bindingHolder: BindingHolder<V> = BindingHolder(viewModel)
-
-    var viewModel: V
+    var viewModel: V?
         set(value) {
             bindingHolder.viewModel = value
         }
@@ -18,21 +17,15 @@ abstract class BindingComponent<T, V>(viewModel: V) : AnkoComponent<T> {
             return bindingHolder.viewModel
         }
 
-    fun <Input> bind(observableField: ObservableField<Input>) = bindingHolder.bind(observableField)
+    fun <Input> bind(function: (V) -> ObservableField<Input>) = bindingHolder.bind(function)
 
     fun <Input> bind(kProperty: KProperty<*>, expression: (V) -> Input) = bindingHolder.bind(kProperty, expression)
 
-    fun <Input> bindSelf(observableField: ObservableField<Input>) = bindingHolder.bindSelf(observableField)
+    fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = bindingHolder.bindSelf(function)
 
     fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bindingHolder.bindSelf(kProperty, expression)
 
     fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = bindingHolder.bind(v, viewRegister)
-
-    @Suppress("UNCHECKED_CAST")
-    fun <Output> twoWayBindingFor(kProperty: KProperty<*>) = bindingHolder.twoWayBindingFor<Output>(kProperty)
-
-    @Suppress("UNCHECKED_CAST")
-    fun <Output> twoWayBindingFor(observableField: ObservableField<Output>) = bindingHolder.twoWayBindingFor(observableField)
 
     override final fun createView(ui: AnkoContext<T>) = createViewWithBindings(ui).apply { bindingHolder.bindAll() }
 
