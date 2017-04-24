@@ -29,6 +29,12 @@ abstract class BindingComponent<T, V>(viewModel: V? = null, val register: Bindin
             return register.viewModel
         }
 
+    override var isBound: Boolean
+        get() = register.isBound
+        set(value) {
+            register.isBound = value
+        }
+
     override fun <Input> bind(function: (V) -> ObservableField<Input>) = register.bind(function)
 
     override fun <Input> bind(kProperty: KProperty<*>?, expression: (V) -> Input) = register.bind(kProperty, expression)

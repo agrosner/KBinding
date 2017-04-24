@@ -21,6 +21,8 @@ interface BindingRegister<V> {
 
     var viewModel: V?
 
+    var isBound: Boolean
+
     fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>)
 
     fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>)
@@ -55,7 +57,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
 
     val onViewModelChanged = { _: Observable, property: KProperty<*>? -> onFieldChanged(property) }
 
-    private var isBound = false
+    override var isBound = false
 
     override var viewModel: V? = viewModel
         set(value) {
