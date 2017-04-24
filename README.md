@@ -37,7 +37,14 @@ holder.bind(textView)
     .to { input, view -> it.name = input}
 
 holder.viewModel = viewModel // set the ViewModel (no restriction and could be a `Presenter`)
-holder.bindAll() // binds all observableBindings, also will execute all of them once.
+// if bound will reevaluate the bindings
+
+// support nullable `ViewModel`
+// if normal binding, a default value for field is used and the expression is not evaluated.
+// in this case it's executed always
+holder.bindNullable(ViewModel::name) { it?.name }
+  .onSelf()
+  .toText(textView)
 
 holder.unbindAll() // when done, unbind
 
