@@ -7,21 +7,21 @@ KBinding is a library for [Anko](https://github.com/Kotlin/anko) to enable datab
 val holder = BindingHolder(viewModel)
 
 // one way binding on Observable fields
-holder.bindSelf(viewModel.name).toText(textView)
+holder.bindSelf { viewModel.name }.toText(textView)
 
 // one way binding on non observables
-holder.bind(ViewModel::name) { viewModel.name }
+holder.bind(ViewModel::name) { it.name }
     .on { if (it == "") View.GONE : View.VISIBLE } // convert to another type
     .toViewVisibility(someView)
 
 // two way binding on observable that synchronizes text and value changes.
-holder.bindSelf(viewModel.name)
+holder.bindSelf { it.name }
   .toText(textView)
   .twoWay()
   .toFieldFromText()
 
 // two way binding that synchronizes compoundbutton / checkbox changes
-holder.bindSelf(viewModel.selected)
+holder.bindSelf { it.selected }
         .toOnCheckedChange(checkbox)
         .twoWay()
         .toFieldFromCompound()
@@ -29,19 +29,19 @@ holder.bindSelf(viewModel.selected)
 // binds input changes from the view to the name property.
 holder.bind(textView)
     .onSelf()
-    .to(viewModel.name)
+    .to { it.name }
 
 // binds input changes from the view to the name property (non observable).
 holder.bind(textView)
     .onSelf()
-    .to { input, view -> viewModel.name = input}
+    .to { input, view -> it.name = input}
 
 holder.viewModel = viewModel // set the ViewModel (no restriction and could be a `Presenter`)
 holder.bindAll() // binds all observableBindings, also will execute all of them once.
 
 holder.unbindAll() // when done, unbind
 
-val binding = holder.bindSelf(textView).to(viewModel.name)
+val binding = holder.bindSelf(textView).toObservable { it.name }
 binding.unbind() // can turn off binding as needed
 
 ```
@@ -110,7 +110,7 @@ When binding, option (1) requires us to explicitly notify the parent on change o
 Option (1) and (2) also requires us to specify the field in the binding:
 ```kotlin
 
-holder.bindSelf(UserViewModel::name) { viewModel.name }
+holder.bindSelf(UserViewModel::name) { it.name }
   .toText(this)
 
 ```
@@ -120,9 +120,11 @@ to the `KProperty`:
 
 ```kotlin
 
-holder.bindSelf(viewModel.name).toText(this)
+holder.bindSelf { it.name }.toText(this)
 
 ```
+
+We use `it` in the binding, not the direct reference to `viewModel` or top-level object in the view because if that `ViewModel` changes, the bindings will reference a stale object!
 
 ### Create the UI
 
@@ -143,7 +145,7 @@ Then to bind views:
 override fun createViewWithBindings(ui: AnkoContext<MainActivity>): View {
   return with(ui) {
     textView {
-      bindSelf(UserViewModel::name) { viewModel.name }
+      bindSelf(UserViewModel::name) { it.name }
         .toText(this)
         .twoWay()
         .toFieldFromText()
@@ -230,7 +232,7 @@ Take, in an e-commerce app we want to display the number of items in the cart. T
 ```kotlin
 
 textView {
-    bind(viewModel.count)
+    bind { viewModel.count }
       .on { string(R.string.someFormattedString, plural(R.plural.somePlural, it)) } // helper methods for `View.context`
       .toText(this)
 }
@@ -243,7 +245,7 @@ To specify this example on a custom text setter:
 ```kotlin
 
 textView {
-    bind(viewModel.count)
+    bind { viewModel.count }
       .on { string(R.string.someFormattedString, plural(R.plural.somePlural, it)) } // helper methods for `View.context`
       .toView(this, { value ->
           text = value
@@ -272,7 +274,16 @@ For example:
 textView {
     bind(this)
       .onSelf() // String updates from `text`
-      .to(viewModel.count)
+      .toObservable  { it.name }
+
+    // or custom update method
+    bindSelf(this).to { vm, input, view ->
+      // viewmodel might be null
+      vm?.let { vm ->
+        // assign data to the viewmodel
+        vm.name = input
+      }
+    }
 }
 
 ```
@@ -307,7 +318,7 @@ Then pass it into the call to `bind`:
 textView {
     bind(this, MyOnTextChangedRegister())
       .onSelf() // String updates from `text`
-      .to(viewModel.count)
+      .to { viewModel.count }
 }
 ```
 

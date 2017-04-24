@@ -35,33 +35,38 @@ class OneWayToSourceExpression<Data, Input, Output, V : View>
 internal constructor(val viewBinder: ViewBinder<Data, V, Output>,
                      val bindingExpression: BindingExpression<Output?, Input?>) {
 
-    fun to(propertySetter: (Input?, V) -> Unit) = OneWayToSource(this, propertySetter)
+    fun to(propertySetter: (Data?, Input?, V) -> Unit) = OneWayToSource(this, propertySetter)
 }
 
 inline fun <Data, Input, Output, V : View>
         OneWayToSourceExpression<Data, Input, Output, V>.toObservable(crossinline function: (Data) -> ObservableField<Input>)
-        = to { input, _ -> viewBinder.component.viewModel?.let { viewModel -> function(viewModel).let { it.value = input ?: it.defaultValue } } }
+        = to { vm, input, _ -> vm?.let { viewModel -> function(viewModel).let { it.value = input ?: it.defaultValue } } }
 
 class OneWayToSource<Data, Input, Output, V : View>
 internal constructor(
         val expression: OneWayToSourceExpression<Data, Input, Output, V>,
-        val propertySetter: (Input?, V) -> Unit,
+        val propertySetter: (Data?, Input?, V) -> Unit,
         val bindingExpression: BindingExpression<Output?, Input?> = expression.bindingExpression,
         val view: V = expression.viewBinder.view,
         val viewRegister: ViewRegister<V, Output> = expression.viewBinder.viewRegister) : Binding<Data> {
 
+    private val component
+        get() = expression.viewBinder.component
+
     init {
-        expression.viewBinder.component.registerBinding(this)
+        component.registerBinding(this)
     }
 
     override fun bind() {
-        viewRegister.register(view, { propertySetter(bindingExpression(it), view) })
+        viewRegister.register(view, {
+            propertySetter(component.viewModel, bindingExpression(it), view)
+        })
         notifyValueChange()
     }
 
     override fun unbind() {
         unbindInternal()
-        expression.viewBinder.component.unregisterBinding(this)
+        component.unregisterBinding(this)
     }
 
     internal fun unbindInternal() {
@@ -69,7 +74,7 @@ internal constructor(
     }
 
     override fun notifyValueChange() {
-        propertySetter(bindingExpression(viewRegister.getValue(view)), view)
+        propertySetter(component.viewModel, bindingExpression(viewRegister.getValue(view)), view)
     }
 }
 
