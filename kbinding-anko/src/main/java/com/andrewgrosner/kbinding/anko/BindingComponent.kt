@@ -19,7 +19,7 @@ fun <T, Data> BindingComponent<T, Data>.bind(v: TimePicker) = register.bind(v)
 fun <T, Data> BindingComponent<T, Data>.bind(v: RatingBar) = register.bind(v)
 fun <T, Data> BindingComponent<T, Data>.bind(v: SeekBar) = register.bind(v)
 
-abstract class BindingComponent<T, V>(viewModel: V, val register: BindingRegister<V> = BindingHolder(viewModel))
+abstract class BindingComponent<T, V>(viewModel: V? = null, val register: BindingRegister<V> = BindingHolder(viewModel))
     : AnkoComponent<T> {
 
     var viewModel: V?
