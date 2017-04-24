@@ -37,7 +37,7 @@ holder.bind(textView)
     .to { input, view -> viewModel.name = input}
 
 holder.viewModel = viewModel // set the ViewModel (no restriction and could be a `Presenter`)
-holder.bindAll() // binds all bindings, also will execute all of them once.
+holder.bindAll() // binds all observableBindings, also will execute all of them once.
 
 holder.unbindAll() // when done, unbind
 
@@ -67,10 +67,10 @@ compile 'com.github.agrosner:KBinding:1.0.0-beta2' // version of KBinding
 
 KBinding works best with [Anko](https://github.com/Kotlin/anko), but can be used by other consumers.
 
-First, we need a ViewModel or object to send data to our bindings.
+First, we need a ViewModel or object to send data to our observableBindings.
 
 By default normal properties, when their value changes, will not propagate those changes
-to our bindings. So we have a couple of options. First we must extend `BaseObservable`.
+to our observableBindings. So we have a couple of options. First we must extend `BaseObservable`.
 
 ```kotlin
 
@@ -79,7 +79,7 @@ class UserViewModel(var name: String = "") : BaseObservable()
 ```
 
 The base class of `BaseObservable` by default handles propagating changes of the ViewModel
- and fields to the bindings when notified. In order to notify changes to the parent `ViewModel`,
+ and fields to the observableBindings when notified. In order to notify changes to the parent `ViewModel`,
  we have three options:
 
   1. Override a fields `setter` and notify changes to our `BaseObservable`:
@@ -126,7 +126,7 @@ holder.bindSelf(viewModel.name).toText(this)
 
 ### Create the UI
 
-Have our components that we use in `Anko` extend `BindingComponent<Activity, ViewModel>` for convenience collection and disposal of the bindings:
+Have our components that we use in `Anko` extend `BindingComponent<Activity, ViewModel>` for convenience collection and disposal of the observableBindings:
 
 ```kotlin
 class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
@@ -134,7 +134,7 @@ class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
 ```
 
 Instead of overridding `createView()`, we override `createViewWithBindings()`. This is
-so we internally can bind all created bindings after view is created.
+so we internally can bind all created observableBindings after view is created.
 
 Then to bind views:
 
@@ -154,9 +154,9 @@ override fun createViewWithBindings(ui: AnkoContext<MainActivity>): View {
 ```
 
 The `BindingComponent` is backed by the `BindingHolder`, which collects and manages
-the bindings.
+the observableBindings.
 
-If we do not unbind the `BindingHolder`, it will lead to memory leaks of all of the bindings. You need to explicitly call `unbind()` when calling the `BindingHolder` directly, or `destroyView()` if using the `BindingComponent`:
+If we do not unbind the `BindingHolder`, it will lead to memory leaks of all of the observableBindings. You need to explicitly call `unbind()` when calling the `BindingHolder` directly, or `destroyView()` if using the `BindingComponent`:
 
 ```kotlin
 bindingHolder.unbind()
@@ -174,16 +174,16 @@ override fun onDestroy() {
 
 ```
 
-# Supported bindings
+# Supported observableBindings
 
-Currently we support three kinds of bindings:
+Currently we support three kinds of observableBindings:
   1. `oneWay` -> handle changes from `ViewModel` to `View`
   2. `twoWay` -> handles changes in both directions between `ViewModel` <-> `View`
   3. `oneWayToSource` -> handles changes from `View` to `ViewModel`
 
 ## One Way Bindings
 
-`oneWay` bindings handle changes from a `Observable` or functional expression on a specific `View`.
+`oneWay` observableBindings handle changes from a `Observable` or functional expression on a specific `View`.
 
 The changes from an `ObservableField` come directly from the instance, while changes
 from an expression need explicit wiring to determine for which property it came from.
@@ -313,7 +313,7 @@ textView {
 
 ## Two Way Bindings
 
-`twoWay` bindings are slightly more complex and complicated. It specifies that an expression or `ObservableField` and `View`'s data are synchronized. We only allow one such binding per `KProperty` or `ObservableField` to prevent a cycle of updates occurring in the UI.
+`twoWay` observableBindings are slightly more complex and complicated. It specifies that an expression or `ObservableField` and `View`'s data are synchronized. We only allow one such binding per `KProperty` or `ObservableField` to prevent a cycle of updates occurring in the UI.
 
 We start off the binding the same way as a `oneWay` (`twoWay` extends off of `oneWay`) and then specify we want it `twoWay` and complete the reverse assignment. Any default, out-of-the-box `oneWay` binding on a `View` will only update `View` when the value is different than the current value. This prevents update cycles that could occur in a `twoWay`.
 

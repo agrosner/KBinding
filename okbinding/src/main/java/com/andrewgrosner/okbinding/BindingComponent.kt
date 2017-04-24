@@ -21,6 +21,8 @@ abstract class BindingComponent<T, V>(viewModel: V, val bindingHolder: BindingRe
 
     fun <Input> bind(kProperty: KProperty<*>, expression: (V) -> Input) = bindingHolder.bind(kProperty, expression)
 
+    fun <Input> bindNullable(kProperty: KProperty<*>? = null, expression: (V?) -> Input) = bindingHolder.bind(kProperty, expression)
+
     fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = bindingHolder.bindSelf(function)
 
     fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bindingHolder.bindSelf(kProperty, expression)

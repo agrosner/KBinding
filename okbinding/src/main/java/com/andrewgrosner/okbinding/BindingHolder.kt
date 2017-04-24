@@ -9,7 +9,9 @@ interface BindingRegister<V> {
 
     fun <Input> bind(function: (V) -> ObservableField<Input>) = ObservableBindingConverter(function, this)
 
-    fun <Input> bind(kProperty: KProperty<*>, expression: (V) -> Input) = InputExpressionBindingConverter(kProperty, expression, this)
+    fun <Input> bind(kProperty: KProperty<*>? = null, expression: (V) -> Input) = InputExpressionBindingConverter(expression, kProperty, this)
+
+    fun <Input> bindNullable(kProperty: KProperty<*>? = null, expression: (V?) -> Input) = NullableInputExpressionBindingConverter(expression, kProperty, this)
 
     fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = bind(function).onSelf()
 
@@ -42,7 +44,8 @@ interface BindingRegister<V> {
  */
 class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
 
-    private val bindings = mutableListOf<OneWayBinding<V, *, *, *, *>>()
+    private val observableBindings = mutableListOf<OneWayBinding<V, *, *, *, *>>()
+    private val genericOneWayBindings = mutableListOf<OneWayBinding<V, *, *, *, *>>()
     private val propertyBindings = mutableMapOf<KProperty<*>, MutableList<OneWayBinding<V, *, *, *, *>>>()
 
     private val twoWayBindings = mutableListOf<TwoWayBinding<V, *, *, *, *>>()
@@ -69,24 +72,33 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
 
     override fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
-            bindings += oneWayBinding
+            observableBindings += oneWayBinding
         } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
             val kProperty = oneWayBinding.converter.property
-            var mutableList = propertyBindings[kProperty]
-            if (mutableList == null) {
-                mutableList = mutableListOf()
-                propertyBindings[kProperty] = mutableList
+            if (kProperty != null) {
+                var mutableList = propertyBindings[kProperty]
+                if (mutableList == null) {
+                    mutableList = mutableListOf()
+                    propertyBindings[kProperty] = mutableList
+                }
+                mutableList.add(oneWayBinding)
+            } else {
+                // generic observableBindings have no property association
+                genericOneWayBindings += oneWayBinding
             }
-            mutableList.add(oneWayBinding)
         }
     }
 
     override fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
-            bindings -= oneWayBinding
+            observableBindings -= oneWayBinding
         } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
             val kProperty = oneWayBinding.converter.property
-            propertyBindings[kProperty]?.remove(oneWayBinding)
+            if (kProperty != null) {
+                propertyBindings[kProperty]?.remove(oneWayBinding)
+            } else {
+                genericOneWayBindings -= oneWayBinding
+            }
         }
     }
 
@@ -102,7 +114,11 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
             if (twoWayPropertyBindings.containsKey(key)) {
                 throw IllegalStateException("Cannot register more than one two way binding to property updates. This could result in a view update cycle.")
             }
-            twoWayPropertyBindings[key] = twoWayBinding
+            if (key != null) {
+                twoWayPropertyBindings[key] = twoWayBinding
+            } else {
+                throw IllegalStateException("Cannot register generic two way binding. Specify a property.")
+            }
         }
     }
 
@@ -112,7 +128,9 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
             twoWayBindings -= twoWayBinding
         } else if (converter is InputExpressionBindingConverter) {
             val key = converter.property
-            twoWayPropertyBindings -= key
+            if (key != null) {
+                twoWayPropertyBindings -= key
+            }
         }
     }
 
@@ -138,7 +156,8 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
         } else {
             // rebind everything if the parent ViewModel changes.
             propertyBindings.forEach { _, bindings -> bindings.forEach { it.notifyValueChange() } }
-            twoWayPropertyBindings[property]?.notifyValueChange()
+            twoWayPropertyBindings.forEach { _, binding -> binding.notifyValueChange() }
+            genericOneWayBindings.forEach { it.notifyValueChange() }
         }
     }
 
@@ -149,14 +168,13 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
             viewModel.addOnPropertyChangedCallback(onViewModelChanged)
         }
 
-        bindings.forEach { it.bind() }
-
+        observableBindings.forEach { it.bind() }
         sourceBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
-
         propertyBindings.values.forEach { bindings -> bindings.forEach { it.bind() } }
 
         twoWayBindings.forEach { it.bind() }
         twoWayPropertyBindings.values.forEach { it.bind() }
+        genericOneWayBindings.forEach { it.bind() }
 
         isBound = true
     }
@@ -166,14 +184,17 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
         if (viewModel is Observable) {
             viewModel.removeOnPropertyChangedCallback(onViewModelChanged)
         }
-        bindings.forEach { it.unbindInternal() }
-        bindings.clear()
+        observableBindings.forEach { it.unbindInternal() }
+        observableBindings.clear()
 
         sourceBindings.values.forEach { bindings -> bindings.forEach { it.unbindInternal() } }
         sourceBindings.clear()
 
         propertyBindings.values.forEach { bindings -> bindings.forEach { it.unbindInternal() } }
         propertyBindings.clear()
+
+        genericOneWayBindings.forEach { it.unbindInternal() }
+        genericOneWayBindings.clear()
 
         twoWayBindings.forEach { it.unbindInternal() }
         twoWayBindings.clear()

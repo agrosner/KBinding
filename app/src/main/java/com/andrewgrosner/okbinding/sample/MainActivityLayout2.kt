@@ -12,6 +12,8 @@ import java.util.Calendar.*
 class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
     : BindingComponent<MainActivity, MainActivityViewModel>(mainActivityViewModel) {
 
+    val nonNonNullViewModel = mainActivityViewModel
+
     override fun createViewWithBindings(ui: AnkoContext<MainActivity>) = with(ui) {
         scrollView {
             verticalLayout {
@@ -81,8 +83,15 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                 }
 
                 button {
-                    text = "Set Null"
-                    onClick { viewModel = null }
+                    bindNullable { it }.on { if (it == null) "Set Not Null" else "Set Null" }
+                            .toText(this)
+                    onClick {
+                        if (viewModel != null) {
+                            viewModel = null
+                        } else {
+                            viewModel = nonNonNullViewModel
+                        }
+                    }
                 }
             }.lparams {
                 horizontalMargin = dip(8)

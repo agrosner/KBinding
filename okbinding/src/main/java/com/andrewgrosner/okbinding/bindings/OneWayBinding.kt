@@ -17,7 +17,7 @@ interface Binding<Data> {
 }
 
 infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.on(expression: BindingExpression<Input, Output>) = OneWayExpression(this, expression)
+        TBinding.on(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
 
 /**
  * Builds an expression that returns itself as the Output of the [Input].
@@ -46,7 +46,7 @@ fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBin
 
 class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>
 internal constructor(val converter: Converter,
-                     val expression: BindingExpression<Input, Output?>) {
+                     val expression: BindingExpression<Input?, Output?>) {
     fun <V : View> toView(view: V, viewExpression: (V, Output?) -> Unit)
             = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
 
@@ -59,10 +59,7 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
 
-    fun convert(): Output? {
-        val data = converter.component.viewModel
-        return if (data != null) oneWayExpression.expression(converter.convertValue(data)) else null
-    }
+    fun convert() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
 
     @Suppress("UNCHECKED_CAST")
     fun toView(view: V, viewExpression: ((V, Output?) -> Unit)) = apply {

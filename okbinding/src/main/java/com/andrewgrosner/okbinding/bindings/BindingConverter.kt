@@ -10,7 +10,7 @@ interface BindingConverter<Data, out Input> {
 
     val component: BindingRegister<Data>
 
-    fun convertValue(data: Data): Input
+    fun convertValue(data: Data?): Input?
 
     fun bind(binding: Binding<Data>) {}
     fun unbind(binding: Binding<Data>) {}
@@ -28,7 +28,7 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
             return if (viewModel != null) function(viewModel) else null
         }
 
-    override fun convertValue(data: Data) = observableField!!.value
+    override fun convertValue(data: Data?) = observableField?.value
 
     override fun bind(binding: Binding<Data>) {
         this.oneWayBinding = binding
@@ -45,8 +45,14 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
     }
 }
 
-class InputExpressionBindingConverter<Data, Input>(val property: KProperty<*>,
-                                                   val expression: (Data) -> Input,
-                                                   override val component: BindingRegister<Data>) : BindingConverter<Data, Input> {
-    override fun convertValue(data: Data) = expression(data)
+class InputExpressionBindingConverter<Data, out Input>(val expression: (Data) -> Input,
+                                                       val property: KProperty<*>? = null,
+                                                       override val component: BindingRegister<Data>) : BindingConverter<Data, Input> {
+    override fun convertValue(data: Data?): Input? = if (data != null) expression(data) else null
+}
+
+class NullableInputExpressionBindingConverter<Data, out Input>(val expression: (Data?) -> Input,
+                                                               val property: KProperty<*>? = null,
+                                                               override val component: BindingRegister<Data>) : BindingConverter<Data, Input> {
+    override fun convertValue(data: Data?) = expression(data)
 }
