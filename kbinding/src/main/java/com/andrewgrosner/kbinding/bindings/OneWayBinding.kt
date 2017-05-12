@@ -20,6 +20,12 @@ infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
         TBinding.on(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
 
 /**
+ * Builds an expression that flips itself as the Output of a Boolean. If value is null, we do not
+ * reverse it.
+ */
+fun <Data, TBinding : BindingConverter<Data, Boolean>> TBinding.reverse() = OneWayExpression(this, { if (it != null) !it else null })
+
+/**
  * Builds an expression that returns itself as the Output of the [Input].
  */
 fun <Data, Input, TBinding : BindingConverter<Data, Input>> TBinding.onSelf() = OneWayExpression(this, { it })
