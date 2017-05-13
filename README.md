@@ -69,7 +69,7 @@ allProjects {
 
 compile 'com.github.agrosner.kbinding:kbinding:1.0.0-beta2' // version of KBinding
 
-// to use with Anko
+// to use with Anko, separate artifact.
 compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used
 compile 'com.github.agrosner.KBinding:kbinding-anko:1.0.0-beta2'
 ```

@@ -1,43 +1,107 @@
 package com.andrewgrosner.kbinding
 
+import android.app.Activity
+import android.app.Fragment
 import android.view.View
 import com.andrewgrosner.kbinding.bindings.*
 import kotlin.reflect.KProperty
 
-
+/**
+ * Internal interface class that's used to consolidate the functionality between a [BindingRegister]
+ * and [BindingHolder].
+ */
 interface BindingRegister<V> {
 
+    /**
+     * Starts an [Observable] expression that executes when the attached observable changes.
+     */
     fun <Input> bind(function: (V) -> ObservableField<Input>) = ObservableBindingConverter(function, this)
 
+    /**
+     * Starts a [KProperty] expression that executes when the [BaseObservable] notifies its value changes.
+     */
     fun <Input> bind(kProperty: KProperty<*>? = null, expression: (V) -> Input) = InputExpressionBindingConverter(expression, kProperty, this)
 
+    /**
+     * Starts a [KProperty] expression that executes even when the possibility
+     * of the parent [BaseObservable] in this [BindingRegister] is null. Useful for loading state
+     * or when expected data is not present yet in the view.
+     */
     fun <Input> bindNullable(kProperty: KProperty<*>? = null, expression: (V?) -> Input) = NullableInputExpressionBindingConverter(expression, kProperty, this)
 
+    /**
+     * Starts an [Observable] that unwraps the [ObservableField.value] from the function when the value
+     * changes.
+     */
     fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = bind(function).onSelf()
 
+    /**
+     * Starts a [KProperty] expression that passes the result of the expression to the final view expression.
+     */
     fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bind(kProperty, expression).onSelf()
 
+    /**
+     * Starts a OneWayToSource [View] expression that will evaluate from the [View] onto the next expression.
+     */
     fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = ViewBinder(v, viewRegister, this)
 
+    /**
+     * The data registered on the holder. Use this to pass down variables and content that you expect
+     * to change.
+     */
     var viewModel: V?
 
+    /**
+     * Returns true if the [viewModel] is bound.
+     */
     var isBound: Boolean
 
+    /**
+     * Internal helper method to register OneWay binding.
+     */
     fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>)
 
+    /**
+     * Internal helper method to unregister OneWay binding.
+     */
     fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>)
 
+    /**
+     * Internal helper method to register TwoWay binding.
+     */
     fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>)
 
+    /**
+     * Internal helper method to unregister TwoWay binding.
+     */
     fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>)
 
+    /**
+     * Internal helper method to register OneWayToSource binding.
+     */
     fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>)
 
+    /**
+     * Internal helper method to unregister OneWayToSource binding.
+     */
     fun unregisterBinding(oneWayToSource: OneWayToSource<V, *, *, *>)
 
+    /**
+     * Called when a [viewModel] is set. Evaluates all binding expressions as well as binds their changes
+     * to this [BindingHolder].
+     */
     fun bindAll()
 
+    /**
+     * Call this to unregister all bindings from this [BindingHolder]. Preferrably in the [Activity.onDestroy]
+     * or [Fragment.onDestroyView]
+     */
     fun unbindAll()
+
+    /**
+     * Forces a reevaluation of all bindings
+     */
+    fun notifyChanges()
 }
 
 /**
@@ -161,6 +225,19 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
             twoWayPropertyBindings.forEach { _, binding -> binding.notifyValueChange() }
             genericOneWayBindings.forEach { it.notifyValueChange() }
         }
+    }
+
+    override fun notifyChanges() {
+        if (!isBound) {
+            throw IllegalStateException("Cannot notify changes on an unbound binding holder.")
+        }
+        observableBindings.forEach { it.notifyValueChange() }
+        sourceBindings.values.forEach { bindings -> bindings.forEach { it.notifyValueChange() } }
+        propertyBindings.values.forEach { bindings -> bindings.forEach { it.notifyValueChange() } }
+
+        twoWayBindings.forEach { it.notifyValueChange() }
+        twoWayPropertyBindings.values.forEach { it.notifyValueChange() }
+        genericOneWayBindings.forEach { it.notifyValueChange() }
     }
 
     override fun bindAll() {

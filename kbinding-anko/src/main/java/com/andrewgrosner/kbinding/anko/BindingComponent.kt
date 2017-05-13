@@ -51,6 +51,8 @@ abstract class BindingComponent<T, V>(viewModel: V? = null, val register: Bindin
 
     override fun unbindAll() = register.unbindAll()
 
+    override fun notifyChanges() = register.notifyChanges()
+
     override fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) = register.registerBinding(oneWayBinding)
 
     override fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) = register.unregisterBinding(oneWayBinding)
