@@ -1,46 +1,55 @@
 # KBinding
 
-KBinding is a library for [Anko](https://github.com/Kotlin/anko) to enable databinding in a fluent, easy to understand syntax.
+KBinding is a Kotlin databinding library best used with [Anko](https://github.com/Kotlin/anko) to enable databinding in a fluent, easy to understand syntax.
 
 ```kotlin
 
 val holder = BindingHolder(viewModel)
 
 // one way binding on Observable fields
-holder.oneWay(bindSelf(viewModel.name).toText(textView))
+holder.bindSelf { viewModel.name }.toText(textView)
 
 // one way binding on non observables
-holder.oneWay(ViewModel::name,
-  bind({ viewModel.name })
+holder.bind(ViewModel::name) { it.name }
     .on { if (it == "") View.GONE : View.VISIBLE } // convert to another type
-    .toViewVisibility(someView))
+    .toViewVisibility(someView)
 
 // two way binding on observable that synchronizes text and value changes.
-holder.twoWay(bindSelf(viewModel.name)
+holder.bindSelf { it.name }
   .toText(textView)
   .twoWay()
-  .toFieldFromText())
+  .toFieldFromText()
 
 // two way binding that synchronizes compoundbutton / checkbox changes
-holder.twoWay(bindSelf(viewModel.selected)
+holder.bindSelf { it.selected }
         .toOnCheckedChange(checkbox)
         .twoWay()
-        .toFieldFromCompound())
+        .toFieldFromCompound()
 
 // binds input changes from the view to the name property.
-holder.oneWayToSource(bind(textView)
+holder.bind(textView)
     .onSelf()
-    .to(viewModel.name))
+    .to { it.name }
 
 // binds input changes from the view to the name property (non observable).
-holder.oneWayToSource(bind(textView)
+holder.bind(textView)
     .onSelf()
-    .to { input, view -> viewModel.name = input})
+    .to { input, view -> it.name = input}
 
 holder.viewModel = viewModel // set the ViewModel (no restriction and could be a `Presenter`)
-holder.bindAll() // binds all bindings, also will execute all of them once.
+// if bound will reevaluate the bindings
+
+// support nullable `ViewModel`
+// if normal binding, a default value for field is used and the expression is not evaluated.
+// in this case it's executed always
+holder.bindNullable(ViewModel::name) { it?.name }
+  .onSelf()
+  .toText(textView)
 
 holder.unbindAll() // when done, unbind
+
+val binding = holder.bindSelf(textView).toObservable { it.name }
+binding.unbind() // can turn off binding as needed
 
 ```
 
@@ -57,18 +66,22 @@ allProjects {
 ```
 
 ```gradle
+
+compile 'com.github.agrosner.kbinding:kbinding:1.0.0-beta2' // version of KBinding
+
+// to use with Anko, separate artifact.
 compile 'org.jetbrains.anko:anko-sdk15:0.9.1' // current version of anko used
-compile 'com.github.agrosner:KBinding:1.0.0-beta1' // version of KBinding
+compile 'com.github.agrosner.KBinding:kbinding-anko:1.0.0-beta2'
 ```
 
 ## Getting Started
 
 KBinding works best with [Anko](https://github.com/Kotlin/anko), but can be used by other consumers.
 
-First, we need a ViewModel or object to send data to our bindings.
+First, we need a ViewModel or object to send data to our observableBindings.
 
 By default normal properties, when their value changes, will not propagate those changes
-to our bindings. So we have a couple of options. First we must extend `BaseObservable`.
+to our observableBindings. So we have a couple of options. First we must extend `BaseObservable`.
 
 ```kotlin
 
@@ -77,7 +90,7 @@ class UserViewModel(var name: String = "") : BaseObservable()
 ```
 
 The base class of `BaseObservable` by default handles propagating changes of the ViewModel
- and fields to the bindings when notified. In order to notify changes to the parent `ViewModel`,
+ and fields to the observableBindings when notified. In order to notify changes to the parent `ViewModel`,
  we have three options:
 
   1. Override a fields `setter` and notify changes to our `BaseObservable`:
@@ -108,7 +121,8 @@ When binding, option (1) requires us to explicitly notify the parent on change o
 Option (1) and (2) also requires us to specify the field in the binding:
 ```kotlin
 
-oneWay(UserViewModel::name, bindSelf { viewModel.name }.toText(this))
+holder.bindSelf(UserViewModel::name) { it.name }
+  .toText(this)
 
 ```
 
@@ -117,13 +131,15 @@ to the `KProperty`:
 
 ```kotlin
 
-oneWay(bindSelf(viewModel.name).toText(this))
+holder.bindSelf { it.name }.toText(this)
 
 ```
 
+We use `it` in the binding, not the direct reference to `viewModel` or top-level object in the view because if that `ViewModel` changes, the bindings will reference a stale object!
+
 ### Create the UI
 
-Have our components that we use in `Anko` extend `BindingComponent<Activity, ViewModel>` for convenience collection and disposal of the bindings:
+Have our components that we use in `Anko` extend `BindingComponent<Activity, ViewModel>` for convenience collection and disposal of the observableBindings:
 
 ```kotlin
 class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
@@ -131,7 +147,7 @@ class MainActivityLayout(mainActivityViewModel: MainActivityViewModel)
 ```
 
 Instead of overridding `createView()`, we override `createViewWithBindings()`. This is
-so we internally can bind all created bindings after view is created.
+so we internally can bind all created observableBindings after view is created.
 
 Then to bind views:
 
@@ -140,11 +156,10 @@ Then to bind views:
 override fun createViewWithBindings(ui: AnkoContext<MainActivity>): View {
   return with(ui) {
     textView {
-      twoWay(UserViewModel::name,
-        bindSelf { viewModel.name }
+      bindSelf(UserViewModel::name) { it.name }
         .toText(this)
         .twoWay()
-        .toFieldFromText())
+        .toFieldFromText()
     }
   }
 }
@@ -152,9 +167,9 @@ override fun createViewWithBindings(ui: AnkoContext<MainActivity>): View {
 ```
 
 The `BindingComponent` is backed by the `BindingHolder`, which collects and manages
-the bindings.
+the observableBindings.
 
-If we do not unbind the `BindingHolder`, it will lead to memory leaks of all of the bindings. You need to explicitly call `unbind()` when calling the `BindingHolder` directly, or `destroyView()` if using the `BindingComponent`:
+If we do not unbind the `BindingHolder`, it will lead to memory leaks of all of the observableBindings. You need to explicitly call `unbind()` when calling the `BindingHolder` directly, or `destroyView()` if using the `BindingComponent`:
 
 ```kotlin
 bindingHolder.unbind()
@@ -172,16 +187,16 @@ override fun onDestroy() {
 
 ```
 
-# Supported bindings
+# Supported observableBindings
 
-Currently we support three kinds of bindings:
+Currently we support three kinds of observableBindings:
   1. `oneWay` -> handle changes from `ViewModel` to `View`
   2. `twoWay` -> handles changes in both directions between `ViewModel` <-> `View`
   3. `oneWayToSource` -> handles changes from `View` to `ViewModel`
 
 ## One Way Bindings
 
-`oneWay` bindings handle changes from a `Observable` or functional expression on a specific `View`.
+`oneWay` observableBindings handle changes from a `Observable` or functional expression on a specific `View`.
 
 The changes from an `ObservableField` come directly from the instance, while changes
 from an expression need explicit wiring to determine for which property it came from.
@@ -197,9 +212,9 @@ The expression syntax is required to register to changes on a specific `KPropert
 ```kotlin
 
 textView {
-    oneWay(MyViewModelClass::someField,
-      bindSelf { viewModel.someField }
-      .toText(this))
+    bindSelf(MyViewModelClass::someField)
+    { viewModel.someField }
+      .toText(this)
 }
 
 ```
@@ -228,9 +243,9 @@ Take, in an e-commerce app we want to display the number of items in the cart. T
 ```kotlin
 
 textView {
-    oneWay(bind(viewModel.count)
+    bind { viewModel.count }
       .on { string(R.string.someFormattedString, plural(R.plural.somePlural, it)) } // helper methods for `View.context`
-      .toText(this))
+      .toText(this)
 }
 
 ```
@@ -241,11 +256,11 @@ To specify this example on a custom text setter:
 ```kotlin
 
 textView {
-    oneWay(bind(viewModel.count)
+    bind { viewModel.count }
       .on { string(R.string.someFormattedString, plural(R.plural.somePlural, it)) } // helper methods for `View.context`
       .toView(this, { value ->
           text = value
-        }))
+        })
 }
 
 ```
@@ -268,9 +283,18 @@ For example:
 ```kotlin
 
 textView {
-    oneWayToSource(bind(this)
+    bind(this)
       .onSelf() // String updates from `text`
-      .to(viewModel.count))
+      .toObservable  { it.name }
+
+    // or custom update method
+    bindSelf(this).to { vm, input, view ->
+      // viewmodel might be null
+      vm?.let { vm ->
+        // assign data to the viewmodel
+        vm.name = input
+      }
+    }
 }
 
 ```
@@ -303,15 +327,15 @@ Then pass it into the call to `bind`:
 
 ```kotlin
 textView {
-    oneWayToSource(bind(this, MyOnTextChangedRegister())
+    bind(this, MyOnTextChangedRegister())
       .onSelf() // String updates from `text`
-      .to(viewModel.count))
+      .to { viewModel.count }
 }
 ```
 
 ## Two Way Bindings
 
-`twoWay` bindings are slightly more complex and complicated. It specifies that an expression or `ObservableField` and `View`'s data are synchronized. We only allow one such binding per `KProperty` or `ObservableField` to prevent a cycle of updates occurring in the UI.
+`twoWay` observableBindings are slightly more complex and complicated. It specifies that an expression or `ObservableField` and `View`'s data are synchronized. We only allow one such binding per `KProperty` or `ObservableField` to prevent a cycle of updates occurring in the UI.
 
 We start off the binding the same way as a `oneWay` (`twoWay` extends off of `oneWay`) and then specify we want it `twoWay` and complete the reverse assignment. Any default, out-of-the-box `oneWay` binding on a `View` will only update `View` when the value is different than the current value. This prevents update cycles that could occur in a `twoWay`.
 
@@ -324,8 +348,8 @@ To register a `twoWay` binding on an `ObservableField` that relates to a user in
 
 ```kotlin
 editText {
-  twoWay(bindSelf(viewModel.address).toText(this)
-          .twoWay().toFieldFromText())
+  bindSelf { viewModel.address }.toText(this)
+          .twoWay().toFieldFromText()
 }
 ```
 
@@ -337,10 +361,10 @@ To use expressions without conveniences:
 
 ```kotlin
 editText {
-  twoWay(MyViewModelClass::address, bindSelf { viewModel.address }.toText(this)
+  bindSelf(MyViewModelClass::address) { viewModel.address }.toText(this)
           .twoWay().toInput(OnTextChangedRegister()) { viewValue ->
             viewModel.address.value = it ?: viewModel.address.defaultValue // if null, set non-null default if we'd like.
-            })
+            }
 }
 ```
 

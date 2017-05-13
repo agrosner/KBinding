@@ -31,7 +31,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
 
-    compile project(':okbinding')
+    compile project(':kbinding')
+    compile project(':kbinding-anko')
 
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

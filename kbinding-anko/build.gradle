@@ -1,0 +1,22 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+    }
+}
+
+dependencies {
+    compile project(':kbinding')
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'org.jetbrains.anko:anko-sdk15:0.9.1'
+}
+
+apply from: '../kotlin-artifacts.gradle'
