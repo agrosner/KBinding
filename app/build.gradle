@@ -33,6 +33,8 @@ dependencies {
 
     compile project(':kbinding')
     compile project(':kbinding-anko')
+    compile "org.jetbrains.anko:anko-appcompat-v7:0.9.1"
+    compile 'org.jetbrains.anko:anko-sdk15:0.9.1'
 
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

@@ -52,6 +52,13 @@ interface BindingRegister<V> {
     var viewModel: V?
 
     /**
+     * Non-null safe access expression. Will throw a [KotlinNullPointerException] if null. This is
+     * assuming the viewmodel exists.
+     */
+    val viewModelSafe: V
+        get() = viewModel!!
+
+    /**
      * Returns true if the [viewModel] is bound.
      */
     var isBound: Boolean

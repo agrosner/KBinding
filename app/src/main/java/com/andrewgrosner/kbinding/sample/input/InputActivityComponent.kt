@@ -1,29 +1,30 @@
-package com.andrewgrosner.kbinding.sample
+package com.andrewgrosner.kbinding.sample.input
 
+import android.graphics.Color
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import com.andrewgrosner.kbinding.anko.BindingComponent
 import com.andrewgrosner.kbinding.anko.bind
 import com.andrewgrosner.kbinding.bindings.*
+import com.andrewgrosner.kbinding.sample.R
 import org.jetbrains.anko.*
-import java.util.Calendar.*
 
 /**
  * Description:
  */
-class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
-    : BindingComponent<MainActivity, MainActivityViewModel>(mainActivityViewModel) {
+class InputActivityComponent(viewModel: InputActivityViewModel)
+    : BindingComponent<InputActivity, InputActivityViewModel>(viewModel) {
 
-    val nonNonNullViewModel = mainActivityViewModel
+    val nonNonNullViewModel = viewModel
 
-    override fun createViewWithBindings(ui: AnkoContext<MainActivity>) = with(ui) {
+    override fun createViewWithBindings(ui: AnkoContext<InputActivity>) = with(ui) {
         scrollView {
             verticalLayout {
                 linearLayout {
                     textView {
                         id = R.id.firstName
                         textSize = 16f
-                        bindSelf(MainActivityViewModel::firstName) { it.firstName }.toText(this)
-                        bind(MainActivityViewModel::firstName) { it.firstName }
+                        bindSelf(InputActivityViewModel::firstName) { it.firstName }.toText(this)
+                        bind(InputActivityViewModel::firstName) { it.firstName }
                                 .onIsNotNullOrEmpty()
                                 .toViewVisibilityB(this)
 
@@ -34,7 +35,7 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
 
                     textView {
                         textSize = 16f
-                        bindSelf(MainActivityViewModel::lastName) { it.lastName }.toText(this)
+                        bindSelf(InputActivityViewModel::lastName) { it.lastName }.toText(this)
                         onClick { viewModel?.onLastNameClick() }
                     }.lparams {
                         leftMargin = dip(4)
@@ -72,20 +73,10 @@ class MainActivityLayout2(mainActivityViewModel: MainActivityViewModel)
                     }
                 }
 
-                textView {
-                    bindSelf { it.currentTime }.toView(this) { _, value ->
-                        text = "Current Date is ${value?.get(MONTH)}/${value?.get(DAY_OF_MONTH)}/${value?.get(YEAR)}"
-                    }
-                }
-
-                datePicker {
-                    bindSelf { it.currentTime }.toDatePicker(this)
-                            .twoWay().toFieldFromDate()
-                }
-
                 button {
                     bindNullable { it }.on { if (it == null) "Set Not Null" else "Set Null" }
                             .toText(this)
+                    textColor = Color.BLACK
                     onClick {
                         if (viewModel != null) {
                             viewModel = null

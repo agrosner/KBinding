@@ -1,13 +1,12 @@
-package com.andrewgrosner.kbinding.sample
+package com.andrewgrosner.kbinding.sample.input
 
-import com.andrewgrosner.kbinding.BaseObservable
 import com.andrewgrosner.kbinding.observable
 import java.util.*
 
 /**
  * Description:
  */
-class MainActivityViewModel : BaseObservable() {
+class InputActivityViewModel : com.andrewgrosner.kbinding.BaseObservable() {
 
     val firstName = "Andrew"
 
@@ -18,8 +17,6 @@ class MainActivityViewModel : BaseObservable() {
     val oneWaySourceInput = observable("")
 
     val selected = observable(true)
-
-    val currentTime = observable(Calendar.getInstance())
 
     var normalField = ""
         set(value) {

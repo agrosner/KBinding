@@ -5,4 +5,5 @@
           type="id"/>
     <item name="onOff"
           type="id"/>
+    <item name="tag_position" type="id"/>
 </resources>
