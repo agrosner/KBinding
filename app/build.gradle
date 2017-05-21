@@ -23,6 +23,8 @@ android {
     }
 }
 
+def anko_version = '0.10.0'
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -30,11 +32,13 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
 
     compile project(':kbinding')
     compile project(':kbinding-anko')
-    compile "org.jetbrains.anko:anko-appcompat-v7:0.9.1"
-    compile 'org.jetbrains.anko:anko-sdk15:0.9.1'
+    compile "org.jetbrains.anko:anko-appcompat-v7:$anko_version"
+    compile "org.jetbrains.anko:anko-sdk15:$anko_version"
+    compile "org.jetbrains.anko:anko-recyclerview-v7:$anko_version"
 
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

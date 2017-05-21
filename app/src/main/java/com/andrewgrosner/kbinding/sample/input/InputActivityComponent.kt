@@ -28,7 +28,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                                 .onIsNotNullOrEmpty()
                                 .toViewVisibilityB(this)
 
-                        onClick { viewModel?.onFirstNameClick() }
+                        setOnClickListener { viewModel?.onFirstNameClick() }
                     }.lparams {
                         rightMargin = dip(4)
                     }
@@ -36,7 +36,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                     textView {
                         textSize = 16f
                         bindSelf(InputActivityViewModel::lastName) { it.lastName }.toText(this)
-                        onClick { viewModel?.onLastNameClick() }
+                        setOnClickListener { viewModel?.onLastNameClick() }
                     }.lparams {
                         leftMargin = dip(4)
                     }
@@ -74,10 +74,10 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                 }
 
                 button {
-                    bindNullable { it }.on { if (it == null) "Set Not Null" else "Set Null" }
+                    bindNullable { it }.onNullable { if (it == null) "Set Not Null" else "Set Null" }
                             .toText(this)
                     textColor = Color.BLACK
-                    onClick {
+                    setOnClickListener {
                         if (viewModel != null) {
                             viewModel = null
                         } else {
