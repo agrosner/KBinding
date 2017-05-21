@@ -1,5 +1,7 @@
 package com.andrewgrosner.kbinding.bindings
 
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.*
 import com.andrewgrosner.kbinding.viewextensions.*
@@ -7,7 +9,7 @@ import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
 
-interface Binding<Data> {
+interface Binding {
 
     fun notifyValueChange()
 
@@ -16,8 +18,22 @@ interface Binding<Data> {
     fun unbind()
 }
 
+internal val mainHandler = Handler(Looper.getMainLooper())
+
 infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
         TBinding.on(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
+
+/**
+ * Runs the [expression] only if the [Input] is not null, otherwise returns null.
+ */
+inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
+        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>,
+                           crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
+    if (it != null) expression(it) else nullExpression()
+}
+
+inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
+        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>) = onNotNull(expression) { null }
 
 /**
  * Builds an expression that flips itself as the Output of a Boolean. If value is null, we do not
@@ -50,9 +66,8 @@ fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBin
  */
 fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBinding.onIsNotNullOrEmpty() = OneWayExpression(this, { !it.isNullOrEmpty() })
 
-class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>
-internal constructor(val converter: Converter,
-                     val expression: BindingExpression<Input?, Output?>) {
+class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>(
+        val converter: Converter, val expression: BindingExpression<Input?, Output?>) {
     fun <V : View> toView(view: V, viewExpression: (V, Output?) -> Unit)
             = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
 
@@ -60,7 +75,7 @@ internal constructor(val converter: Converter,
 
 class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
 internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output, Converter>,
-                     val converter: Converter = oneWayExpression.converter) : Binding<Data> {
+                     val converter: Converter = oneWayExpression.converter) : Binding {
 
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
@@ -95,7 +110,8 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
         viewExpression?.let {
             val view = this.view
             if (view != null) {
-                it(view, convert())
+                // run expression on UI thread.
+                mainHandler.post { it(view, convert()) }
             }
         }
     }

@@ -27,7 +27,7 @@ internal constructor(
         val viewRegister: ViewRegister<V, Output>,
         inverseSetter: InverseSetter<Data, Output>,
         val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V> = twoWayBindingExpression.oneWayBinding)
-    : Binding<Data> {
+    : Binding {
 
     private val inverseSetters = mutableSetOf(inverseSetter)
 
