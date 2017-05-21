@@ -18,10 +18,10 @@ class ViewBinder<Data, V : View, Output>(val view: V,
                                          val viewRegister: ViewRegister<V, Output>,
                                          val component: BindingRegister<Data>)
 
-fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.on(bindingExpression: BindingExpression<Output?, Input?>)
+fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.onNullable(bindingExpression: BindingExpression<Output?, Input?>)
         = OneWayToSourceExpression(this, bindingExpression)
 
-fun <Data, V : View, Output> ViewBinder<Data, V, Output>.onSelf() = on { it }
+fun <Data, V : View, Output> ViewBinder<Data, V, Output>.onSelf() = onNullable { it }
 
 class OneWayToSourceExpression<Data, Input, Output, V : View>
 internal constructor(val viewBinder: ViewBinder<Data, V, Output>,

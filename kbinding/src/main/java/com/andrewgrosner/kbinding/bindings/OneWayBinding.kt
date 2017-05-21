@@ -21,19 +21,19 @@ interface Binding {
 internal val mainHandler = Handler(Looper.getMainLooper())
 
 infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.on(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
+        TBinding.onNullable(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
 
 /**
  * Runs the [expression] only if the [Input] is not null, otherwise returns null.
  */
 inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>,
+        TBinding.on(crossinline expression: BindingExpression<Input, Output>,
                            crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
     if (it != null) expression(it) else nullExpression()
 }
 
 inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>) = onNotNull(expression) { null }
+        TBinding.on(crossinline expression: BindingExpression<Input, Output>) = on(expression) { null }
 
 /**
  * Builds an expression that flips itself as the Output of a Boolean. If value is null, we do not
