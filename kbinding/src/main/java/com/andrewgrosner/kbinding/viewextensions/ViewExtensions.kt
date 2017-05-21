@@ -10,9 +10,9 @@ fun View.setVisibilityIfNeeded(visibility: Int?) {
     }
 }
 
-fun View.string(resId: Int, vararg args: Any?) = context.getString(resId, args)!!
+fun View.string(resId: Int, vararg args: Any?) = context.getString(resId, *args)!!
 
-fun View.plural(resId: Int, quantity: Int, vararg args: Any?) = context.resources.getQuantityString(resId, quantity, args)!!
+fun View.plural(resId: Int, quantity: Int, vararg args: Any?) = context.resources.getQuantityString(resId, quantity, *args)!!
 
 fun View.int(resId: Int) = context.resources.getInteger(resId)
 
