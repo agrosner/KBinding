@@ -26,10 +26,14 @@ infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
 /**
  * Runs the [expression] only if the [Input] is not null, otherwise returns null.
  */
-infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.onNotNull(expression: BindingExpression<Input, Output>) = OneWayExpression(this) {
-    if (it != null) expression(it) else null
+inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
+        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>,
+                           crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
+    if (it != null) expression(it) else nullExpression()
 }
+
+inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
+        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>) = onNotNull(expression) { null }
 
 /**
  * Builds an expression that flips itself as the Output of a Boolean. If value is null, we do not
@@ -62,9 +66,8 @@ fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBin
  */
 fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBinding.onIsNotNullOrEmpty() = OneWayExpression(this, { !it.isNullOrEmpty() })
 
-class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>
-internal constructor(val converter: Converter,
-                     val expression: BindingExpression<Input?, Output?>) {
+class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>(
+        val converter: Converter, val expression: BindingExpression<Input?, Output?>) {
     fun <V : View> toView(view: V, viewExpression: (V, Output?) -> Unit)
             = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
 
