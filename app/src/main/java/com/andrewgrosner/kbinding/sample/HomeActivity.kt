@@ -1,10 +1,10 @@
 package com.andrewgrosner.kbinding.sample
 
-import android.content.Intent
 import android.os.Bundle
 import com.andrewgrosner.kbinding.sample.base.BaseActivity
 import com.andrewgrosner.kbinding.sample.calendar.CalendarActivity
 import com.andrewgrosner.kbinding.sample.input.InputActivity
+import org.jetbrains.anko.startActivity
 
 /**
  * Description:
@@ -20,8 +20,8 @@ class HomeActivity : BaseActivity<HomeActivityViewModel, HomeActivity>() {
 
         viewModel?.onItemClicked = { _, (name) ->
             when (name) {
-                "Input Mirroring" -> startActivity(Intent(this, InputActivity::class.java))
-                "Calendar" -> startActivity(Intent(this, CalendarActivity::class.java))
+                "Input Mirroring" -> startActivity<InputActivity>()
+                "Calendar" -> startActivity<CalendarActivity>()
             }
         }
     }

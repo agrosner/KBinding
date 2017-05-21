@@ -12,15 +12,15 @@ interface BindingConverter<Data, out Input> {
 
     fun convertValue(data: Data?): Input?
 
-    fun bind(binding: Binding<Data>) {}
-    fun unbind(binding: Binding<Data>) {}
+    fun bind(binding: Binding) {}
+    fun unbind(binding: Binding) {}
 }
 
 class ObservableBindingConverter<Data, Input>(val function: (Data) -> ObservableField<Input>,
                                               override val component: BindingRegister<Data>)
     : BindingConverter<Data, Input> {
 
-    private var oneWayBinding: Binding<Data>? = null
+    private var oneWayBinding: Binding? = null
 
     val observableField: ObservableField<Input>?
         get() {
@@ -30,12 +30,12 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
 
     override fun convertValue(data: Data?) = observableField?.value
 
-    override fun bind(binding: Binding<Data>) {
+    override fun bind(binding: Binding) {
         this.oneWayBinding = binding
         observableField?.addOnPropertyChangedCallback(this::propertyChanged)
     }
 
-    override fun unbind(binding: Binding<Data>) {
+    override fun unbind(binding: Binding) {
         observableField?.removeOnPropertyChangedCallback(this::propertyChanged)
         this.oneWayBinding = null
     }

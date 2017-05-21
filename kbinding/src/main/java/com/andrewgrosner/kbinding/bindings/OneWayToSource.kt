@@ -40,7 +40,7 @@ internal constructor(
         val propertySetter: (Data?, Input?, V) -> Unit,
         val bindingExpression: BindingExpression<Output?, Input?> = expression.bindingExpression,
         val view: V = expression.viewBinder.view,
-        val viewRegister: ViewRegister<V, Output> = expression.viewBinder.viewRegister) : Binding<Data> {
+        val viewRegister: ViewRegister<V, Output> = expression.viewBinder.viewRegister) : Binding {
 
     private val component
         get() = expression.viewBinder.component

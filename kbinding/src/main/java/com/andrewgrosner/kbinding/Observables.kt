@@ -67,7 +67,7 @@ open class BaseObservable : Observable {
 }
 
 
-class ObservableField<T>(private var _value: T, private val configureClosure: PropertyChangedCallback? = null)
+class ObservableField<T>(_value: T, private val configureClosure: PropertyChangedCallback? = null)
     : BaseObservable(), ReadWriteProperty<Any?, T> {
 
     val defaultValue = _value
@@ -83,7 +83,7 @@ class ObservableField<T>(private var _value: T, private val configureClosure: Pr
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
         checkConfigured()
-        return _value
+        return value
     }
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
