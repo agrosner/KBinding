@@ -3,7 +3,16 @@ package com.andrewgrosner.kbinding
 import android.app.Activity
 import android.app.Fragment
 import android.view.View
-import com.andrewgrosner.kbinding.bindings.*
+import com.andrewgrosner.kbinding.bindings.Binding
+import com.andrewgrosner.kbinding.bindings.InputExpressionBindingConverter
+import com.andrewgrosner.kbinding.bindings.NullableInputExpressionBindingConverter
+import com.andrewgrosner.kbinding.bindings.ObservableBindingConverter
+import com.andrewgrosner.kbinding.bindings.OneWayBinding
+import com.andrewgrosner.kbinding.bindings.OneWayToSource
+import com.andrewgrosner.kbinding.bindings.TwoWayBinding
+import com.andrewgrosner.kbinding.bindings.ViewBinder
+import com.andrewgrosner.kbinding.bindings.ViewRegister
+import com.andrewgrosner.kbinding.bindings.onSelf
 import kotlin.reflect.KProperty
 
 /**
@@ -22,6 +31,13 @@ interface BindingRegister<V> {
      */
     fun <Input> bind(kProperty: KProperty<*>? = null, expression: (V) -> Input) = InputExpressionBindingConverter(expression, kProperty, this)
 
+
+    /**
+     * Starts a [KProperty] expression that executes when the [BaseObservable] notifies its value changes.
+     * Uses reflection in the getter of the [KProperty] to retrieve the value of the property.
+     */
+    fun <Input> bind(kProperty: KProperty<Input>) = InputExpressionBindingConverter({ kProperty.getter.call(it) }, kProperty, this)
+
     /**
      * Starts a [KProperty] expression that executes even when the possibility
      * of the parent [BaseObservable] in this [BindingRegister] is null. Useful for loading state
@@ -39,6 +55,12 @@ interface BindingRegister<V> {
      * Starts a [KProperty] expression that passes the result of the expression to the final view expression.
      */
     fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bind(kProperty, expression).onSelf()
+
+    /**
+     * Starts a [KProperty] expression that passes the result of the expression to the final view expression.
+     * Uses reflection to get the value of the property instead of declaring redundant call.
+     */
+    fun <Input> bindSelf(kProperty: KProperty<Input>) = bind(kProperty).onSelf()
 
     /**
      * Starts a OneWayToSource [View] expression that will evaluate from the [View] onto the next expression.

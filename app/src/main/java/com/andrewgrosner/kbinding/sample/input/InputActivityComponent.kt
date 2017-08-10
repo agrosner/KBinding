@@ -23,8 +23,8 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                     textView {
                         id = R.id.firstName
                         textSize = 16f
-                        bindSelf(InputActivityViewModel::firstName) { it.firstName }.toText(this)
-                        bind(InputActivityViewModel::firstName) { it.firstName }
+                        bindSelf(InputActivityViewModel::firstName).toText(this)
+                        bind(InputActivityViewModel::firstName)
                                 .onIsNotNullOrEmpty()
                                 .toViewVisibilityB(this)
 
@@ -35,7 +35,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
 
                     textView {
                         textSize = 16f
-                        bindSelf(InputActivityViewModel::lastName) { it.lastName }.toText(this)
+                        bindSelf(InputActivityViewModel::lastName).toText(this)
                         setOnClickListener { viewModel?.onLastNameClick() }
                     }.lparams {
                         leftMargin = dip(4)

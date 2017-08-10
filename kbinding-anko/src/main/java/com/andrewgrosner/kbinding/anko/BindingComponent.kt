@@ -1,11 +1,20 @@
 package com.andrewgrosner.kbinding.anko
 
 import android.view.View
-import android.widget.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.RatingBar
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BindingHolder
 import com.andrewgrosner.kbinding.BindingRegister
 import com.andrewgrosner.kbinding.ObservableField
-import com.andrewgrosner.kbinding.bindings.*
+import com.andrewgrosner.kbinding.bindings.OneWayBinding
+import com.andrewgrosner.kbinding.bindings.OneWayToSource
+import com.andrewgrosner.kbinding.bindings.TwoWayBinding
+import com.andrewgrosner.kbinding.bindings.ViewRegister
+import com.andrewgrosner.kbinding.bindings.bind
 import org.jetbrains.anko.AnkoComponent
 import org.jetbrains.anko.AnkoContext
 import java.util.*
@@ -39,11 +48,15 @@ abstract class BindingComponent<T, V>(viewModel: V? = null, val register: Bindin
 
     override fun <Input> bind(kProperty: KProperty<*>?, expression: (V) -> Input) = register.bind(kProperty, expression)
 
+    override fun <Input> bind(kProperty: KProperty<Input>) = register.bind(kProperty)
+
     override fun <Input> bindNullable(kProperty: KProperty<*>?, expression: (V?) -> Input) = register.bindNullable(kProperty, expression)
 
     override fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = register.bindSelf(function)
 
     override fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = register.bindSelf(kProperty, expression)
+
+    override fun <Input> bindSelf(kProperty: KProperty<Input>) = register.bindSelf(kProperty)
 
     override fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = register.bind(v, viewRegister)
 

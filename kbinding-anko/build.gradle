@@ -2,18 +2,16 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 26
+    buildToolsVersion "25.0.3"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 26
     }
 }
 
-def anko_version = "0.10.0"
+def anko_version = "0.10.1"
 
 dependencies {
     compile project(':kbinding')

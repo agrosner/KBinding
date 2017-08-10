@@ -20,6 +20,9 @@ interface Binding {
 
 internal val mainHandler = Handler(Looper.getMainLooper())
 
+/**
+ * Allows both the [Input] and [Output] of the function to be null.
+ */
 infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
         TBinding.onNullable(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
 
