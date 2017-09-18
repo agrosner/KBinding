@@ -69,7 +69,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                 switch {
                     bindSelf { it.selected }.toOnCheckedChange(this)
                             .twoWay().toFieldFromCompound().onExpression { _, input ->
-                        text = if (input ?: false) "On" else "Off"
+                        text = if (input == true) "On" else "Off"
                     }
                 }
 

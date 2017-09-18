@@ -1,7 +1,12 @@
 package com.andrewgrosner.kbinding.bindings
 
 import android.view.View
-import android.widget.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.RatingBar
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BaseObservable
 import com.andrewgrosner.kbinding.BindingHolder
 import java.util.*
@@ -75,14 +80,14 @@ internal constructor(
      * When view changes, call our binding expression again.
      */
     fun notifyViewChanged(value: Output?) {
-        inverseSetters.forEach { it.invoke(component.viewModel, value) }
+        inverseSetters.forEach { it(component.viewModel, value) }
     }
 
     /**
      * Notifies change manually from the current value of the field bound to it.
      */
     fun notifyViewChanged() {
-        notifyViewChanged(oneWayBinding.convert())
+        notifyViewChanged(oneWayBinding.evaluateBinding())
     }
 }
 
@@ -149,7 +154,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
                 observableField.value = input ?: observableField.defaultValue
             }
         })
-        = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
+        = toInput(OnDateChangedRegister(oneWayBinding.evaluateBinding()), inverseSetter)
 
 /**
  * Immediately binds changes from this [DatePicker] to the specified expression in a two way binding.
@@ -161,7 +166,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
         BindingConverter<Data, Calendar>, DatePicker>.toExprFromDate(
         inverseSetter: InverseSetter<Data, Calendar>)
-        = toInput(OnDateChangedRegister(oneWayBinding.convert()), inverseSetter)
+        = toInput(OnDateChangedRegister(oneWayBinding.evaluateBinding()), inverseSetter)
 
 /**
  * Immediately binds changes from this [TimePicker] to the specified observable field in a two way binding.

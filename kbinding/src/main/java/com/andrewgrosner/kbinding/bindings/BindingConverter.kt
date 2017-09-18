@@ -32,18 +32,18 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
 
     override fun bind(binding: Binding) {
         this.oneWayBinding = binding
-        observableField?.addOnPropertyChangedCallback(this::propertyChanged)
+        observableField?.addOnPropertyChangedCallback(this::onPropertyChanged)
     }
 
     override fun unbind(binding: Binding) {
         observableField?.let { observableField ->
-            observableField.removeOnPropertyChangedCallback(this::propertyChanged)
+            observableField.removeOnPropertyChangedCallback(this::onPropertyChanged)
             observableField.unregisterFromBinding()
         }
         this.oneWayBinding = null
     }
 
-    fun propertyChanged(observable: Observable, kProperty: KProperty<*>?) {
+    fun onPropertyChanged(observable: Observable, kProperty: KProperty<*>?) {
         oneWayBinding?.notifyValueChange()
     }
 }

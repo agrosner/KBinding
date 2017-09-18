@@ -34,7 +34,7 @@ open class CallbackRegistry<C, T, A>
 /**
  * Creates an EventRegistry that notifies the event with notifier.
  * @param notifier The class to use to notify events.
- */(val notifier: (C, T, KProperty<*>?, A) -> Unit) : Cloneable {
+ */(private val notifier: (C, T, KProperty<*>?, A) -> Unit) : Cloneable {
 
     companion object {
 

@@ -1,1 +1,1 @@
-include ':app', ':kbinding', ':kbinding-anko', ':kbinding-rx'
+include ':app', ':kbinding', ':kbinding-anko'

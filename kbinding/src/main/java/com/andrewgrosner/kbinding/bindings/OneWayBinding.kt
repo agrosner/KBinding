@@ -3,8 +3,19 @@ package com.andrewgrosner.kbinding.bindings
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.*
-import com.andrewgrosner.kbinding.viewextensions.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.ProgressBar
+import android.widget.RatingBar
+import android.widget.TextView
+import com.andrewgrosner.kbinding.viewextensions.setCheckedIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setProgressIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setRatingIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setTextIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setTimeIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setVisibilityIfNeeded
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.launch
 import java.util.*
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
@@ -31,7 +42,7 @@ infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
  */
 inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
         TBinding.on(crossinline expression: BindingExpression<Input, Output>,
-                           crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
+                    crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
     if (it != null) expression(it) else nullExpression()
 }
 
@@ -83,7 +94,7 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
 
-    fun convert() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
+    fun evaluateBinding() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
 
     @Suppress("UNCHECKED_CAST")
     fun toView(view: V, viewExpression: ((V, Output?) -> Unit)) = apply {
@@ -111,10 +122,13 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
      */
     override fun notifyValueChange() {
         viewExpression?.let {
-            val view = this.view
+            val view = this@OneWayBinding.view
             if (view != null) {
-                // run expression on UI thread.
-                mainHandler.post { it(view, convert()) }
+                launch(CommonPool) {
+                    val value = evaluateBinding()
+                    // set the value back to the UI thread.
+                    mainHandler.post { it(view, value) }
+                }
             }
         }
     }

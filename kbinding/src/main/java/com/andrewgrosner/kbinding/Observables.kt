@@ -104,7 +104,7 @@ class ObservableFieldImpl<T>(_value: T, private val configureClosure: PropertyCh
         checkConfigured()
         if (value != this.value) {
             this.value = value
-            if (thisRef is BaseObservable) thisRef.notifyChange(property)
+            (thisRef as? BaseObservable)?.notifyChange(property)
         }
     }
 
