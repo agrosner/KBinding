@@ -36,7 +36,10 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
     }
 
     override fun unbind(binding: Binding) {
-        observableField?.removeOnPropertyChangedCallback(this::propertyChanged)
+        observableField?.let { observableField ->
+            observableField.removeOnPropertyChangedCallback(this::propertyChanged)
+            observableField.unregisterFromBinding()
+        }
         this.oneWayBinding = null
     }
 

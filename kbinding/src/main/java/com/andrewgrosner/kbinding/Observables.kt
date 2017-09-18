@@ -37,7 +37,6 @@ interface Observable {
      * @param callback The callback that should stop listening.
      */
     fun removeOnPropertyChangedCallback(callback: PropertyChangedCallback)
-
 }
 
 open class BaseObservable : Observable {
@@ -63,18 +62,33 @@ open class BaseObservable : Observable {
 
      * @param fieldId The generated BR id for the Bindable field.
      */
-    @Synchronized fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyChange(this, property)
+    @Synchronized
+    fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyChange(this, property)
+}
+
+interface ObservableField<T> : Observable {
+
+    var value: T
+
+    val defaultValue: T
+
+    /**
+     * Called when unbinding from its own reference. Useful for cleanup.
+     */
+    fun unregisterFromBinding() {
+
+    }
 }
 
 
-class ObservableField<T>(_value: T, private val configureClosure: PropertyChangedCallback? = null)
-    : BaseObservable(), ReadWriteProperty<Any?, T> {
-
-    val defaultValue = _value
+class ObservableFieldImpl<T>(_value: T, private val configureClosure: PropertyChangedCallback? = null)
+    : BaseObservable(), ReadWriteProperty<Any?, T>, ObservableField<T> {
 
     private var configured = false
 
-    var value = _value
+    override val defaultValue = _value
+
+    override var value = _value
         set(value) {
             checkConfigured()
             field = value
@@ -106,5 +120,5 @@ class ObservableField<T>(_value: T, private val configureClosure: PropertyChange
  * Creates new instance of the [Observable] field.
  */
 fun <T> observable(initialValue: T, change: PropertyChangedCallback? = null)
-        = ObservableField(initialValue, change)
+        = ObservableFieldImpl(initialValue, change)
 
