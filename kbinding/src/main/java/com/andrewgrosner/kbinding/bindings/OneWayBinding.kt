@@ -14,9 +14,7 @@ import com.andrewgrosner.kbinding.viewextensions.setRatingIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setTextIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setTimeIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setVisibilityIfNeeded
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.launch
-import java.util.*
+import java.util.Calendar
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
 
@@ -91,6 +89,7 @@ class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
 internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output, Converter>,
                      val converter: Converter = oneWayExpression.converter) : Binding {
 
+    private var valueRunnable: Runnable? = null
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
 
@@ -124,10 +123,12 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
         viewExpression?.let {
             val view = this@OneWayBinding.view
             if (view != null) {
-                launch(CommonPool) {
-                    val value = evaluateBinding()
-                    // set the value back to the UI thread.
-                    mainHandler.post { it(view, value) }
+                val value = evaluateBinding()
+                valueRunnable?.let { valueRunnable ->
+                    mainHandler.removeCallbacks(valueRunnable)
+                }
+                valueRunnable = Runnable { it(view, value) }.also {
+                    mainHandler.post(it)
                 }
             }
         }

@@ -2,12 +2,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "25.0.3"
+    compileSdkVersion target_sdk
     defaultConfig {
         applicationId "com.andrewgrosner.okbinding"
-        minSdkVersion 15
-        targetSdkVersion 26
+        minSdkVersion min_sdk
+        targetSdkVersion target_sdk
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -23,8 +22,8 @@ android {
     }
 }
 
-def anko_version = '0.10.0'
-def support_version = "26.0.0"
+def anko_version = '0.10.3'
+def support_version = "27.0.2"
 
 dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
