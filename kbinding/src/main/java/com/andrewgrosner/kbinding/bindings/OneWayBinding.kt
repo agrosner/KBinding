@@ -14,6 +14,9 @@ import com.andrewgrosner.kbinding.viewextensions.setRatingIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setTextIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setTimeIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setVisibilityIfNeeded
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import java.util.Calendar
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
@@ -89,9 +92,10 @@ class OneWayBinding<Data, Input, Output, Converter : BindingConverter<Data, Inpu
 internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output, Converter>,
                      val converter: Converter = oneWayExpression.converter) : Binding {
 
-    private var valueRunnable: Runnable? = null
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
+
+    private var deferredUI: Deferred<Unit>? = null
 
     fun evaluateBinding() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
 
@@ -120,20 +124,16 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
      * Reruns binding expressions to views.
      */
     override fun notifyValueChange() {
-        viewExpression?.let {
-            val view = this@OneWayBinding.view
-            if (view != null) {
-                val value = evaluateBinding()
-                valueRunnable?.let { valueRunnable ->
-                    mainHandler.removeCallbacks(valueRunnable)
-                }
-                valueRunnable = Runnable { it(view, value) }.also {
-                    mainHandler.post(it)
+        viewExpression?.let { viewExpression ->
+            this@OneWayBinding.view?.let { view ->
+                deferredUI?.cancel()
+                deferredUI = async(UI) {
+                    val value = async { evaluateBinding() }.await()
+                    viewExpression(view, value)
                 }
             }
         }
     }
-
 }
 
 /**

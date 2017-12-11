@@ -20,6 +20,15 @@ dependencies {
     compile project(':kbinding')
     compile deps.kotlin
     compile "org.jetbrains.anko:anko-sdk15:$anko_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 }
+
+kotlin {
+    experimental {
+        coroutines 'enable'
+    }
+}
+
 
 apply from: '../kotlin-artifacts.gradle'

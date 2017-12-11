@@ -9,7 +9,9 @@ import android.widget.TextView
 import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BaseObservable
 import com.andrewgrosner.kbinding.BindingHolder
-import java.util.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import java.util.Calendar
 
 fun <Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
         OneWayBinding<Data, Input, Output, Converter, V>.twoWay() = TwoWayBindingExpression(this)
@@ -54,7 +56,9 @@ internal constructor(
 
     override fun bind() {
         oneWayBinding.bind()
-        viewRegister.register(oneWayBinding.view!!, { notifyViewChanged(it) })
+        viewRegister.register(oneWayBinding.view!!, { output ->
+            async(UI) { notifyViewChanged(output) }
+        })
         oneWayBinding.notifyValueChange() // trigger value change on bind to respect value of ViewModel over view.
     }
 
@@ -79,15 +83,18 @@ internal constructor(
     /**
      * When view changes, call our binding expression again.
      */
-    fun notifyViewChanged(value: Output?) {
+    suspend fun notifyViewChanged(value: Output?) {
         inverseSetters.forEach { it(component.viewModel, value) }
     }
 
     /**
-     * Notifies change manually from the current value of the field bound to it.
+     * Notifies change manually from the current value of the field bound to it. Runs a non-blocking coroutine.
      */
     fun notifyViewChanged() {
-        notifyViewChanged(oneWayBinding.evaluateBinding())
+        async(UI) {
+            val value = async { oneWayBinding.evaluateBinding() }.await()
+            notifyViewChanged(value)
+        }
     }
 }
 
