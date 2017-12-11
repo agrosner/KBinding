@@ -9,6 +9,7 @@ import com.andrewgrosner.kbinding.bindings.NullableInputExpressionBindingConvert
 import com.andrewgrosner.kbinding.bindings.ObservableBindingConverter
 import com.andrewgrosner.kbinding.bindings.OneWayBinding
 import com.andrewgrosner.kbinding.bindings.OneWayToSource
+import com.andrewgrosner.kbinding.bindings.PropertyExpressionBindingConverter
 import com.andrewgrosner.kbinding.bindings.TwoWayBinding
 import com.andrewgrosner.kbinding.bindings.ViewBinder
 import com.andrewgrosner.kbinding.bindings.ViewRegister
@@ -168,7 +169,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     override fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
             observableBindings += oneWayBinding
-        } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
+        } else if (oneWayBinding.converter is PropertyExpressionBindingConverter) {
             val kProperty = oneWayBinding.converter.property
             if (kProperty != null) {
                 var mutableList = propertyBindings[kProperty]
@@ -187,7 +188,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     override fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
             observableBindings -= oneWayBinding
-        } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
+        } else if (oneWayBinding.converter is PropertyExpressionBindingConverter) {
             val kProperty = oneWayBinding.converter.property
             if (kProperty != null) {
                 propertyBindings[kProperty]?.remove(oneWayBinding)
@@ -204,7 +205,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
                 throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
             }
             twoWayBindings += twoWayBinding
-        } else if (converter is InputExpressionBindingConverter) {
+        } else if (converter is PropertyExpressionBindingConverter) {
             val key = converter.property
             if (twoWayPropertyBindings.containsKey(key)) {
                 throw IllegalStateException("Cannot register more than one two way binding to property updates. This could result in a view update cycle.")
@@ -221,7 +222,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
             twoWayBindings -= twoWayBinding
-        } else if (converter is InputExpressionBindingConverter) {
+        } else if (converter is PropertyExpressionBindingConverter) {
             val key = converter.property
             if (key != null) {
                 twoWayPropertyBindings -= key
@@ -250,8 +251,8 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
             twoWayPropertyBindings[property]?.notifyValueChange()
         } else {
             // rebind everything if the parent ViewModel changes.
-            propertyBindings.forEach { _, bindings -> bindings.forEach { it.notifyValueChange() } }
-            twoWayPropertyBindings.forEach { _, binding -> binding.notifyValueChange() }
+            propertyBindings.forEach { (_, bindings) -> bindings.forEach { it.notifyValueChange() } }
+            twoWayPropertyBindings.forEach { (_, binding) -> binding.notifyValueChange() }
             genericOneWayBindings.forEach { it.notifyValueChange() }
         }
     }

@@ -1,11 +1,15 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext{
+    ext {
         kotlin_version = '1.2.0'
         target_sdk = 27
         min_sdk = 15
         anko_version = '0.10.3'
+
+        deps = [
+                kotlin: "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
+        ]
     }
     repositories {
         jcenter()

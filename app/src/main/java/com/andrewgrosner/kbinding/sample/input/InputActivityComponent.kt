@@ -4,9 +4,28 @@ import android.graphics.Color
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import com.andrewgrosner.kbinding.anko.BindingComponent
 import com.andrewgrosner.kbinding.anko.bind
-import com.andrewgrosner.kbinding.bindings.*
+import com.andrewgrosner.kbinding.bindings.onIsNotNullOrEmpty
+import com.andrewgrosner.kbinding.bindings.onNullable
+import com.andrewgrosner.kbinding.bindings.onSelf
+import com.andrewgrosner.kbinding.bindings.toFieldFromCompound
+import com.andrewgrosner.kbinding.bindings.toFieldFromText
+import com.andrewgrosner.kbinding.bindings.toObservable
+import com.andrewgrosner.kbinding.bindings.toOnCheckedChange
+import com.andrewgrosner.kbinding.bindings.toText
+import com.andrewgrosner.kbinding.bindings.toViewVisibilityB
+import com.andrewgrosner.kbinding.bindings.twoWay
 import com.andrewgrosner.kbinding.sample.R
-import org.jetbrains.anko.*
+import org.jetbrains.anko.AnkoContext
+import org.jetbrains.anko.button
+import org.jetbrains.anko.dip
+import org.jetbrains.anko.editText
+import org.jetbrains.anko.horizontalMargin
+import org.jetbrains.anko.linearLayout
+import org.jetbrains.anko.scrollView
+import org.jetbrains.anko.switch
+import org.jetbrains.anko.textColor
+import org.jetbrains.anko.textView
+import org.jetbrains.anko.verticalLayout
 
 /**
  * Description:
@@ -78,10 +97,9 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                             .toText(this)
                     textColor = Color.BLACK
                     setOnClickListener {
-                        if (viewModel != null) {
-                            viewModel = null
-                        } else {
-                            viewModel = nonNonNullViewModel
+                        viewModel = when {
+                            viewModel != null -> null
+                            else -> nonNonNullViewModel
                         }
                     }
                 }

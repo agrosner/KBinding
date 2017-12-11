@@ -28,5 +28,5 @@ fun haveContentsChanged(str1: CharSequence?, str2: CharSequence?): Boolean {
     if (length != str2?.length) {
         return true
     }
-    return (0..length - 1).any { str1[it] != str2[it] }
+    return (0 until length).any { str1[it] != str2[it] }
 }

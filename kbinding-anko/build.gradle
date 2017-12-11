@@ -8,11 +8,17 @@ android {
         minSdkVersion min_sdk
         targetSdkVersion target_sdk
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
+
 
 dependencies {
     compile project(':kbinding')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile deps.kotlin
     compile "org.jetbrains.anko:anko-sdk15:$anko_version"
 }
 
