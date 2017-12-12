@@ -1,6 +1,6 @@
 package com.andrewgrosner.kbinding
 
-import java.util.*
+import java.util.ArrayList
 import kotlin.reflect.KProperty
 
 /**
@@ -68,13 +68,13 @@ open class CallbackRegistry<C, T, A>
      * @param sender The originator. This is an opaque parameter passed to
      * * [CallbackRegistry] callback
      * *
-     * @param arg An opaque parameter passed to
-     * * [CallbackRegistry] callback
+     * @param property The [KProperty] that is notified.
      * *
      * @param arg2 An opaque parameter passed to
      * * [CallbackRegistry] callback
      */
-    @Synchronized fun notifyCallbacks(sender: T, property: KProperty<*>?, arg2: A) {
+    @Synchronized
+    fun notifyCallbacks(sender: T, property: KProperty<*>?, arg2: A) {
         mNotificationLevel++
         notifyRecurse(sender, property, arg2)
         mNotificationLevel--
@@ -100,13 +100,10 @@ open class CallbackRegistry<C, T, A>
      * Notify up to the first Long.SIZE callbacks that don't have a bit set in `removed`.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
-     * @param arg An opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
+     * [CallbackRegistry] callback
+     * @param property The [KProperty] that is notified.
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry] callback
+     * [CallbackRegistry] callback
      */
     private fun notifyFirst64(sender: T, property: KProperty<*>?, arg2: A) {
         val maxNotified = Math.min(java.lang.Long.SIZE, mCallbacks.size)
@@ -122,13 +119,10 @@ open class CallbackRegistry<C, T, A>
      * Recursion is used to avoid allocating temporary state on the heap.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
-     * @param arg An opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
+     * [CallbackRegistry] callback
+     * @param property The [KProperty] that is notified.
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry] callback
+     * [CallbackRegistry] callback
      */
     private fun notifyRecurse(sender: T, property: KProperty<*>?, arg2: A) {
         val callbackCount = mCallbacks.size
@@ -152,14 +146,10 @@ open class CallbackRegistry<C, T, A>
      * remainderIndex is -1, the first 64 will be notified instead.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
-     * @param arg An opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
+     * [CallbackRegistry] callback
+     * @param property The [KProperty] that is notified.
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
+     * [CallbackRegistry] callback
      * @param remainderIndex The index into mRemainderRemoved that should be notified.
      */
     private fun notifyRemainder(sender: T, property: KProperty<*>?, arg2: A, remainderIndex: Int) {
@@ -184,20 +174,14 @@ open class CallbackRegistry<C, T, A>
      * endIndex should be notified.
 
      * @param sender The originator. This is an opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
-     * @param arg An opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
+     * [CallbackRegistry] callback
+     * @param property The [KProperty] that is notified.
      * @param arg2 An opaque parameter passed to
-     * * [CallbackRegistry] callback
-     * *
+     * [CallbackRegistry] callback
      * @param startIndex The index into the mCallbacks to start notifying.
-     * *
      * @param endIndex One past the last index into mCallbacks to notify.
-     * *
      * @param bits A bit field indicating which callbacks have been removed and shouldn't
-     * *             be notified.
+     *              be notified.
      */
     private fun notifyCallbacks(sender: T, property: KProperty<*>?, arg2: A, startIndex: Int,
                                 endIndex: Int, bits: Long) {
@@ -215,7 +199,8 @@ open class CallbackRegistry<C, T, A>
      * be added. This does not affect current notifications.
      * @param callback The callback to add.
      */
-    @Synchronized fun add(callback: C?) {
+    @Synchronized
+    fun add(callback: C?) {
         if (callback == null) {
             throw IllegalArgumentException("callback cannot be null")
         }
@@ -284,7 +269,8 @@ open class CallbackRegistry<C, T, A>
 
      * @param callback The callback to remove.
      */
-    @Synchronized fun remove(callback: C) {
+    @Synchronized
+    fun remove(callback: C) {
         if (mNotificationLevel == 0) {
             mCallbacks.remove(callback)
         } else {
@@ -323,7 +309,8 @@ open class CallbackRegistry<C, T, A>
 
      * @return a copy of the registered callbacks.
      */
-    @Synchronized fun copyCallbacks(): ArrayList<C> {
+    @Synchronized
+    fun copyCallbacks(): ArrayList<C> {
         val callbacks = ArrayList<C>(mCallbacks.size)
         val numListeners = mCallbacks.size
         for (i in 0..numListeners - 1) {
@@ -339,7 +326,8 @@ open class CallbackRegistry<C, T, A>
 
      * @param callbacks modified to contain all callbacks registered to receive events.
      */
-    @Synchronized fun copyCallbacks(callbacks: MutableList<C>) {
+    @Synchronized
+    fun copyCallbacks(callbacks: MutableList<C>) {
         callbacks.clear()
         val numListeners = mCallbacks.size
         for (i in 0..numListeners - 1) {
@@ -354,7 +342,8 @@ open class CallbackRegistry<C, T, A>
 
      * @return true if there are no registered callbacks or false otherwise.
      */
-    @Synchronized fun isEmpty(): Boolean {
+    @Synchronized
+    fun isEmpty(): Boolean {
         if (mCallbacks.isEmpty()) {
             return true
         } else if (mNotificationLevel == 0) {
@@ -373,7 +362,8 @@ open class CallbackRegistry<C, T, A>
     /**
      * Removes all callbacks from the list.
      */
-    @Synchronized fun clear() {
+    @Synchronized
+    fun clear() {
         if (mNotificationLevel == 0) {
             mCallbacks.clear()
         } else if (!mCallbacks.isEmpty()) {
@@ -421,8 +411,7 @@ class PropertyChangeRegistry : CallbackRegistry<(Observable, KProperty<*>?) -> U
 
      * @param observable The Observable that has changed.
      * *
-     * @param propertyId The BR id of the property that has changed or BR._all if the entire
-     * *                   Observable has changed.
+     * @param property The [KProperty] that has changed. If null, the whole registry is notified.
      */
     fun notifyChange(observable: Observable, property: KProperty<*>? = null) {
         notifyCallbacks(observable, property, null)

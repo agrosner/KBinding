@@ -17,7 +17,6 @@ android {
 
 dependencies {
     compile deps.kotlin
-    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 }
