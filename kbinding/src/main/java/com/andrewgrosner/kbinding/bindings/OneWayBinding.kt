@@ -57,7 +57,7 @@ inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
 fun <Data, TBinding : BindingConverter<Data, Boolean>> TBinding.reverse() = OneWayExpression(this, { if (it != null) !it else null })
 
 /**
- * Builds an expression that returns itself as the Output of the [Input].
+ * Builds an expression that passes the [Input] directly into the [OneWayExpression].
  */
 fun <Data, Input, TBinding : BindingConverter<Data, Input>> TBinding.onSelf() = OneWayExpression(this, { it })
 

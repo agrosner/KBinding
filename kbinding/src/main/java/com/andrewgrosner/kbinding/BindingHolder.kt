@@ -32,10 +32,10 @@ interface BindingRegister<V> {
      */
     fun <Input> bind(kProperty: KProperty<*>? = null, expression: (V) -> Input) = InputExpressionBindingConverter(expression, kProperty, this)
 
-
     /**
      * Starts a [KProperty] expression that executes when the [BaseObservable] notifies its value changes.
      * Uses reflection in the getter of the [KProperty] to retrieve the value of the property.
+     * Ensure you add kotlin-reflect to classpath to prevent a runtime crash.
      */
     fun <Input> bind(kProperty: KProperty<Input>) = InputExpressionBindingConverter({ kProperty.getter.call(it) }, kProperty, this)
 
@@ -60,6 +60,7 @@ interface BindingRegister<V> {
     /**
      * Starts a [KProperty] expression that passes the result of the expression to the final view expression.
      * Uses reflection to get the value of the property instead of declaring redundant call.
+     * Ensure you add kotlin-reflect to classpath to prevent a runtime crash.
      */
     fun <Input> bindSelf(kProperty: KProperty<Input>) = bind(kProperty).onSelf()
 
