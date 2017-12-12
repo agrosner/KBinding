@@ -1,10 +1,16 @@
 package com.andrewgrosner.kbinding.bindings
 
 import android.view.View
-import android.widget.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.RatingBar
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BindingRegister
 import com.andrewgrosner.kbinding.ObservableField
-import java.util.*
+import kotlinx.coroutines.experimental.async
+import java.util.Calendar
 
 
 fun <Data> BindingRegister<Data>.bind(v: TextView) = bind(v, OnTextChangedRegister())
@@ -18,10 +24,10 @@ class ViewBinder<Data, V : View, Output>(val view: V,
                                          val viewRegister: ViewRegister<V, Output>,
                                          val component: BindingRegister<Data>)
 
-fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.on(bindingExpression: BindingExpression<Output?, Input?>)
+fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.onNullable(bindingExpression: BindingExpression<Output?, Input?>)
         = OneWayToSourceExpression(this, bindingExpression)
 
-fun <Data, V : View, Output> ViewBinder<Data, V, Output>.onSelf() = on { it }
+fun <Data, V : View, Output> ViewBinder<Data, V, Output>.onSelf() = onNullable { it }
 
 class OneWayToSourceExpression<Data, Input, Output, V : View>
 internal constructor(val viewBinder: ViewBinder<Data, V, Output>,
@@ -31,8 +37,14 @@ internal constructor(val viewBinder: ViewBinder<Data, V, Output>,
 }
 
 inline fun <Data, Input, Output, V : View>
-        OneWayToSourceExpression<Data, Input, Output, V>.toObservable(crossinline function: (Data) -> ObservableField<Input>)
-        = to { vm, input, _ -> vm?.let { viewModel -> function(viewModel).let { it.value = input ?: it.defaultValue } } }
+        OneWayToSourceExpression<Data, Input, Output, V>.toObservable(
+        crossinline function: (Data) -> ObservableField<Input>) =
+        to { viewModel, input, _ ->
+            if (viewModel != null) {
+                val field = function(viewModel)
+                field.value = input ?: field.defaultValue
+            }
+        }
 
 class OneWayToSource<Data, Input, Output, V : View>
 internal constructor(
@@ -50,8 +62,8 @@ internal constructor(
     }
 
     override fun bind() {
-        viewRegister.register(view, {
-            propertySetter(component.viewModel, bindingExpression(it), view)
+        viewRegister.register(view, { output ->
+            async { propertySetter(component.viewModel, bindingExpression(output), view) }
         })
         notifyValueChange()
     }

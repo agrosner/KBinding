@@ -3,9 +3,21 @@ package com.andrewgrosner.kbinding.bindings
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.*
-import com.andrewgrosner.kbinding.viewextensions.*
-import java.util.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.ProgressBar
+import android.widget.RatingBar
+import android.widget.TextView
+import com.andrewgrosner.kbinding.viewextensions.setCheckedIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setProgressIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setRatingIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setTextIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setTimeIfNecessary
+import com.andrewgrosner.kbinding.viewextensions.setVisibilityIfNeeded
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import java.util.Calendar
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
 
@@ -20,20 +32,23 @@ interface Binding {
 
 internal val mainHandler = Handler(Looper.getMainLooper())
 
+/**
+ * Allows both the [Input] and [Output] of the function to be null.
+ */
 infix fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.on(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
+        TBinding.onNullable(expression: BindingExpression<Input?, Output?>) = OneWayExpression(this, expression)
 
 /**
  * Runs the [expression] only if the [Input] is not null, otherwise returns null.
  */
 inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>,
-                           crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
+        TBinding.on(crossinline expression: BindingExpression<Input, Output>,
+                    crossinline nullExpression: () -> Output?) = OneWayExpression(this) {
     if (it != null) expression(it) else nullExpression()
 }
 
 inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
-        TBinding.onNotNull(crossinline expression: BindingExpression<Input, Output>) = onNotNull(expression) { null }
+        TBinding.on(crossinline expression: BindingExpression<Input, Output>) = on(expression) { null }
 
 /**
  * Builds an expression that flips itself as the Output of a Boolean. If value is null, we do not
@@ -42,7 +57,7 @@ inline fun <Data, Input, Output, TBinding : BindingConverter<Data, Input>>
 fun <Data, TBinding : BindingConverter<Data, Boolean>> TBinding.reverse() = OneWayExpression(this, { if (it != null) !it else null })
 
 /**
- * Builds an expression that returns itself as the Output of the [Input].
+ * Builds an expression that passes the [Input] directly into the [OneWayExpression].
  */
 fun <Data, Input, TBinding : BindingConverter<Data, Input>> TBinding.onSelf() = OneWayExpression(this, { it })
 
@@ -80,7 +95,9 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
 
-    fun convert() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
+    private var deferredUI: Deferred<Unit>? = null
+
+    fun evaluateBinding() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
 
     @Suppress("UNCHECKED_CAST")
     fun toView(view: V, viewExpression: ((V, Output?) -> Unit)) = apply {
@@ -107,15 +124,16 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
      * Reruns binding expressions to views.
      */
     override fun notifyValueChange() {
-        viewExpression?.let {
-            val view = this.view
-            if (view != null) {
-                // run expression on UI thread.
-                mainHandler.post { it(view, convert()) }
+        viewExpression?.let { viewExpression ->
+            this@OneWayBinding.view?.let { view ->
+                deferredUI?.cancel()
+                deferredUI = async(UI) {
+                    val value = async { evaluateBinding() }.await()
+                    viewExpression(view, value)
+                }
             }
         }
     }
-
 }
 
 /**
@@ -131,7 +149,7 @@ infix fun <Input, TBinding : BindingConverter<*, Input>>
  * in previous expressions. If true, [View.VISIBLE] is used, otherwise it's set to [View.GONE]
  */
 infix fun <Input, TBinding : BindingConverter<*, Input>>
-        OneWayExpression<*, Input, Boolean, TBinding>.toViewVisibilityB(textView: View)
+        OneWayExpression<*, Input, Boolean, TBinding>.toShowHideView(textView: View)
         = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value != null && value) View.VISIBLE else View.GONE) })
 
 /**

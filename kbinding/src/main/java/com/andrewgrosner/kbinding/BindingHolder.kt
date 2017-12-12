@@ -3,7 +3,17 @@ package com.andrewgrosner.kbinding
 import android.app.Activity
 import android.app.Fragment
 import android.view.View
-import com.andrewgrosner.kbinding.bindings.*
+import com.andrewgrosner.kbinding.bindings.Binding
+import com.andrewgrosner.kbinding.bindings.InputExpressionBindingConverter
+import com.andrewgrosner.kbinding.bindings.NullableInputExpressionBindingConverter
+import com.andrewgrosner.kbinding.bindings.ObservableBindingConverter
+import com.andrewgrosner.kbinding.bindings.OneWayBinding
+import com.andrewgrosner.kbinding.bindings.OneWayToSource
+import com.andrewgrosner.kbinding.bindings.PropertyExpressionBindingConverter
+import com.andrewgrosner.kbinding.bindings.TwoWayBinding
+import com.andrewgrosner.kbinding.bindings.ViewBinder
+import com.andrewgrosner.kbinding.bindings.ViewRegister
+import com.andrewgrosner.kbinding.bindings.onSelf
 import kotlin.reflect.KProperty
 
 /**
@@ -23,6 +33,13 @@ interface BindingRegister<V> {
     fun <Input> bind(kProperty: KProperty<*>? = null, expression: (V) -> Input) = InputExpressionBindingConverter(expression, kProperty, this)
 
     /**
+     * Starts a [KProperty] expression that executes when the [BaseObservable] notifies its value changes.
+     * Uses reflection in the getter of the [KProperty] to retrieve the value of the property.
+     * Ensure you add kotlin-reflect to classpath to prevent a runtime crash.
+     */
+    fun <Input> bind(kProperty: KProperty<Input>) = InputExpressionBindingConverter({ kProperty.getter.call(it) }, kProperty, this)
+
+    /**
      * Starts a [KProperty] expression that executes even when the possibility
      * of the parent [BaseObservable] in this [BindingRegister] is null. Useful for loading state
      * or when expected data is not present yet in the view.
@@ -39,6 +56,13 @@ interface BindingRegister<V> {
      * Starts a [KProperty] expression that passes the result of the expression to the final view expression.
      */
     fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = bind(kProperty, expression).onSelf()
+
+    /**
+     * Starts a [KProperty] expression that passes the result of the expression to the final view expression.
+     * Uses reflection to get the value of the property instead of declaring redundant call.
+     * Ensure you add kotlin-reflect to classpath to prevent a runtime crash.
+     */
+    fun <Input> bindSelf(kProperty: KProperty<Input>) = bind(kProperty).onSelf()
 
     /**
      * Starts a OneWayToSource [View] expression that will evaluate from the [View] onto the next expression.
@@ -146,7 +170,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     override fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
             observableBindings += oneWayBinding
-        } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
+        } else if (oneWayBinding.converter is PropertyExpressionBindingConverter) {
             val kProperty = oneWayBinding.converter.property
             if (kProperty != null) {
                 var mutableList = propertyBindings[kProperty]
@@ -165,7 +189,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
     override fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) {
         if (oneWayBinding.converter is ObservableBindingConverter) {
             observableBindings -= oneWayBinding
-        } else if (oneWayBinding.converter is InputExpressionBindingConverter) {
+        } else if (oneWayBinding.converter is PropertyExpressionBindingConverter) {
             val kProperty = oneWayBinding.converter.property
             if (kProperty != null) {
                 propertyBindings[kProperty]?.remove(oneWayBinding)
@@ -182,7 +206,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
                 throw IllegalStateException("Cannot register more than one two way binding on an Observable field. This could result in a view update cycle.")
             }
             twoWayBindings += twoWayBinding
-        } else if (converter is InputExpressionBindingConverter) {
+        } else if (converter is PropertyExpressionBindingConverter) {
             val key = converter.property
             if (twoWayPropertyBindings.containsKey(key)) {
                 throw IllegalStateException("Cannot register more than one two way binding to property updates. This could result in a view update cycle.")
@@ -199,7 +223,7 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
         val converter = twoWayBinding.oneWayBinding.converter
         if (converter is ObservableBindingConverter) {
             twoWayBindings -= twoWayBinding
-        } else if (converter is InputExpressionBindingConverter) {
+        } else if (converter is PropertyExpressionBindingConverter) {
             val key = converter.property
             if (key != null) {
                 twoWayPropertyBindings -= key
@@ -228,8 +252,8 @@ class BindingHolder<V>(viewModel: V? = null) : BindingRegister<V> {
             twoWayPropertyBindings[property]?.notifyValueChange()
         } else {
             // rebind everything if the parent ViewModel changes.
-            propertyBindings.forEach { _, bindings -> bindings.forEach { it.notifyValueChange() } }
-            twoWayPropertyBindings.forEach { _, binding -> binding.notifyValueChange() }
+            propertyBindings.forEach { (_, bindings) -> bindings.forEach { it.notifyValueChange() } }
+            twoWayPropertyBindings.forEach { (_, binding) -> binding.notifyValueChange() }
             genericOneWayBindings.forEach { it.notifyValueChange() }
         }
     }

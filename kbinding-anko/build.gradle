@@ -2,24 +2,33 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion target_sdk
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion min_sdk
+        targetSdkVersion target_sdk
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
-def anko_version = "0.9.1"
 
 dependencies {
-    compile project(':kbinding')
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.jetbrains.anko:anko-sdk15:${anko_version}"
-    compile "org.jetbrains.anko:anko-recyclerview-v7:${anko_version}"
+    implementation project(':kbinding')
+    api deps.kotlin
+    api "org.jetbrains.anko:anko-sdk15:$anko_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 }
+
+kotlin {
+    experimental {
+        coroutines 'enable'
+    }
+}
+
 
 apply from: '../kotlin-artifacts.gradle'

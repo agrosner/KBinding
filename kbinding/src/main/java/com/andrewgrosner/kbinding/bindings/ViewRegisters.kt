@@ -4,11 +4,21 @@ import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
 import android.widget.DatePicker.OnDateChangedListener
+import android.widget.RatingBar
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.TimePicker
 import java.lang.ref.WeakReference
-import java.util.*
-import java.util.Calendar.*
+import java.util.Calendar
+import java.util.Calendar.DAY_OF_MONTH
+import java.util.Calendar.HOUR_OF_DAY
+import java.util.Calendar.MINUTE
+import java.util.Calendar.MONTH
+import java.util.Calendar.YEAR
+import java.util.Calendar.getInstance
 
 private typealias Callback<T> = (T) -> Unit
 
@@ -118,6 +128,7 @@ class OnTimeChangedRegister : ViewRegister<TimePicker, Calendar>(), TimePicker.O
         view.setOnTimeChangedListener(null)
     }
 
+    @Suppress("DEPRECATION")
     override fun getValue(view: TimePicker) = getInstance().apply {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             set(HOUR_OF_DAY, view.currentHour)

@@ -1,15 +1,19 @@
 package com.andrewgrosner.kbinding.anko
 
 import android.view.View
-import android.widget.*
+import android.widget.CompoundButton
+import android.widget.DatePicker
+import android.widget.RatingBar
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BindingHolder
 import com.andrewgrosner.kbinding.BindingRegister
-import com.andrewgrosner.kbinding.ObservableField
-import com.andrewgrosner.kbinding.bindings.*
+import com.andrewgrosner.kbinding.bindings.bind
+import com.andrewgrosner.kbinding.bindings.onSelf
 import org.jetbrains.anko.AnkoComponent
 import org.jetbrains.anko.AnkoContext
-import java.util.*
-import kotlin.reflect.KProperty
+import java.util.Calendar
 
 fun <T, Data> BindingComponent<T, Data>.bind(v: TextView) = register.bind(v)
 fun <T, Data> BindingComponent<T, Data>.bind(v: CompoundButton) = register.bind(v)
@@ -18,8 +22,15 @@ fun <T, Data> BindingComponent<T, Data>.bind(v: TimePicker) = register.bind(v)
 fun <T, Data> BindingComponent<T, Data>.bind(v: RatingBar) = register.bind(v)
 fun <T, Data> BindingComponent<T, Data>.bind(v: SeekBar) = register.bind(v)
 
-abstract class BindingComponent<T, V>(viewModel: V? = null, val register: BindingRegister<V> = BindingHolder(viewModel))
-    : AnkoComponent<T>, BindingRegister<V> {
+fun <T, Data> BindingComponent<T, Data>.bindSelf(v: TextView) = bind(v).onSelf()
+fun <T, Data> BindingComponent<T, Data>.bindSelf(v: CompoundButton) = bind(v).onSelf()
+fun <T, Data> BindingComponent<T, Data>.bindSelf(v: DatePicker, initialValue: Calendar = Calendar.getInstance()) = bind(v, initialValue).onSelf()
+fun <T, Data> BindingComponent<T, Data>.bindSelf(v: TimePicker) = bind(v).onSelf()
+fun <T, Data> BindingComponent<T, Data>.bindSelf(v: RatingBar) = bind(v).onSelf()
+fun <T, Data> BindingComponent<T, Data>.bindSelf(v: SeekBar) = bind(v).onSelf()
+
+abstract class BindingComponent<in T, V>(viewModel: V? = null, val register: BindingRegister<V> = BindingHolder(viewModel))
+    : AnkoComponent<T>, BindingRegister<V> by register {
 
     override var viewModel: V?
         set(value) {
@@ -34,36 +45,6 @@ abstract class BindingComponent<T, V>(viewModel: V? = null, val register: Bindin
         set(value) {
             register.isBound = value
         }
-
-    override fun <Input> bind(function: (V) -> ObservableField<Input>) = register.bind(function)
-
-    override fun <Input> bind(kProperty: KProperty<*>?, expression: (V) -> Input) = register.bind(kProperty, expression)
-
-    override fun <Input> bindNullable(kProperty: KProperty<*>?, expression: (V?) -> Input) = register.bindNullable(kProperty, expression)
-
-    override fun <Input> bindSelf(function: (V) -> ObservableField<Input>) = register.bindSelf(function)
-
-    override fun <Input> bindSelf(kProperty: KProperty<*>, expression: (V) -> Input) = register.bindSelf(kProperty, expression)
-
-    override fun <Output, VW : View> bind(v: VW, viewRegister: ViewRegister<VW, Output>) = register.bind(v, viewRegister)
-
-    override fun bindAll() = register.bindAll()
-
-    override fun unbindAll() = register.unbindAll()
-
-    override fun notifyChanges() = register.notifyChanges()
-
-    override fun registerBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) = register.registerBinding(oneWayBinding)
-
-    override fun unregisterBinding(oneWayBinding: OneWayBinding<V, *, *, *, *>) = register.unregisterBinding(oneWayBinding)
-
-    override fun registerBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) = register.registerBinding(twoWayBinding)
-
-    override fun unregisterBinding(twoWayBinding: TwoWayBinding<V, *, *, *, *>) = register.unregisterBinding(twoWayBinding)
-
-    override fun registerBinding(oneWayToSource: OneWayToSource<V, *, *, *>) = register.registerBinding(oneWayToSource)
-
-    override fun unregisterBinding(oneWayToSource: OneWayToSource<V, *, *, *>) = register.unregisterBinding(oneWayToSource)
 
     override final fun createView(ui: AnkoContext<T>) = createViewWithBindings(ui).apply { register.bindAll() }
 

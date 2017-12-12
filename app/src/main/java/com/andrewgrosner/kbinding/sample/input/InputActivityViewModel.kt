@@ -1,16 +1,16 @@
 package com.andrewgrosner.kbinding.sample.input
 
+import com.andrewgrosner.kbinding.BaseObservable
 import com.andrewgrosner.kbinding.observable
-import java.util.*
 
 /**
  * Description:
  */
-class InputActivityViewModel : com.andrewgrosner.kbinding.BaseObservable() {
+class InputActivityViewModel : BaseObservable() {
 
     val firstName = "Andrew"
 
-    val lastName: String by observable("Grosner") { _, property -> notifyChange(property) }
+    val lastName: String by observable("Grosner")
 
     val formInput = observable("")
 

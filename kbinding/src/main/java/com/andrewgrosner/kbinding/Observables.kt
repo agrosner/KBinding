@@ -7,19 +7,12 @@ import kotlin.reflect.KProperty
 typealias PropertyChangedCallback = (Observable, KProperty<*>?) -> Unit
 
 /**
- * Observable classes provide a way in which data bound UI can be notified of changes.
- * [ObservableList] and [ObservableMap] also provide the ability to notify when
- * changes occur. ObservableField, ObservableParcelable, ObservableBoolean, ObservableByte,
- * ObservableShort, ObservableInt, ObservableLong, ObservableFloat, and ObservableDouble provide
- * a means by which properties may be notified without implementing Observable.
+ * Observable classes provide a way in which data bound UI can be notified of changes. [ObservableField]
+ * provides most of the observability for our use cases.
  *
  *
- * An Observable object should notify the [OnPropertyChangedCallback] whenever
+ * An Observable object should notify the [PropertyChangedCallback] whenever
  * an observed property of the class changes.
- *
- *
- * The getter for an observable property should be annotated with [Bindable].
- *
  *
  * Convenience class BaseObservable implements this interface and PropertyChangeRegistry
  * can help classes that don't extend BaseObservable to implement the listener registry.
@@ -37,7 +30,6 @@ interface Observable {
      * @param callback The callback that should stop listening.
      */
     fun removeOnPropertyChangedCallback(callback: PropertyChangedCallback)
-
 }
 
 open class BaseObservable : Observable {
@@ -57,24 +49,36 @@ open class BaseObservable : Observable {
     }
 
     /**
-     * Notifies listeners that a specific property has changed. The getter for the property
-     * that changes should be marked with [Bindable] to generate a field in
-     * `BR` to be used as `fieldId`.
-
-     * @param fieldId The generated BR id for the Bindable field.
+     * Notifies listeners that a specific property has changed. Call this when an [ObservableField] has
+     * changed.
      */
-    @Synchronized fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyChange(this, property)
+    @Synchronized
+    fun notifyChange(property: KProperty<*>? = null) = mCallbacks?.notifyChange(this, property)
+}
+
+interface ObservableField<T> : Observable {
+
+    var value: T
+
+    val defaultValue: T
+
+    /**
+     * Called when unbinding from its own reference. Useful for cleanup.
+     */
+    fun unregisterFromBinding() {
+
+    }
 }
 
 
-class ObservableField<T>(_value: T, private val configureClosure: PropertyChangedCallback? = null)
-    : BaseObservable(), ReadWriteProperty<Any?, T> {
-
-    val defaultValue = _value
+class ObservableFieldImpl<T>(_value: T, private val configureClosure: PropertyChangedCallback? = null)
+    : BaseObservable(), ReadWriteProperty<Any?, T>, ObservableField<T> {
 
     private var configured = false
 
-    var value = _value
+    override val defaultValue = _value
+
+    override var value = _value
         set(value) {
             checkConfigured()
             field = value
@@ -90,7 +94,7 @@ class ObservableField<T>(_value: T, private val configureClosure: PropertyChange
         checkConfigured()
         if (value != this.value) {
             this.value = value
-            if (thisRef is BaseObservable) thisRef.notifyChange(property)
+            (thisRef as? BaseObservable)?.notifyChange(property)
         }
     }
 
@@ -106,5 +110,11 @@ class ObservableField<T>(_value: T, private val configureClosure: PropertyChange
  * Creates new instance of the [Observable] field.
  */
 fun <T> observable(initialValue: T, change: PropertyChangedCallback? = null)
-        = ObservableField(initialValue, change)
+        = ObservableFieldImpl(initialValue, change)
+
+/**
+ * Creates new instance of the [Observable] field.
+ */
+fun <T> BaseObservable.observable(initialValue: T)
+        = ObservableFieldImpl(initialValue) { _, kProperty -> notifyChange(kProperty) }
 

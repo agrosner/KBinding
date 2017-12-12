@@ -1,8 +1,8 @@
 package com.andrewgrosner.kbinding.bindings
 
 import com.andrewgrosner.kbinding.BindingRegister
-import com.andrewgrosner.kbinding.Observable
 import com.andrewgrosner.kbinding.ObservableField
+import com.andrewgrosner.kbinding.PropertyChangedCallback
 import kotlin.reflect.KProperty
 
 
@@ -32,27 +32,36 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
 
     override fun bind(binding: Binding) {
         this.oneWayBinding = binding
-        observableField?.addOnPropertyChangedCallback(this::propertyChanged)
+        observableField?.addOnPropertyChangedCallback(onPropertyChanged)
     }
 
     override fun unbind(binding: Binding) {
-        observableField?.removeOnPropertyChangedCallback(this::propertyChanged)
+        observableField?.let { observableField ->
+            observableField.removeOnPropertyChangedCallback(onPropertyChanged)
+            observableField.unregisterFromBinding()
+        }
         this.oneWayBinding = null
     }
 
-    fun propertyChanged(observable: Observable, kProperty: KProperty<*>?) {
-        oneWayBinding?.notifyValueChange()
-    }
+    private val onPropertyChanged: PropertyChangedCallback = { _, _ -> oneWayBinding?.notifyValueChange() }
 }
 
-class InputExpressionBindingConverter<Data, out Input>(val expression: (Data) -> Input,
-                                                       val property: KProperty<*>? = null,
-                                                       override val component: BindingRegister<Data>) : BindingConverter<Data, Input> {
+class InputExpressionBindingConverter<Data, out Input>(
+        val expression: (Data) -> Input,
+        override val property: KProperty<*>? = null,
+        override val component: BindingRegister<Data>)
+    : BindingConverter<Data, Input>, PropertyExpressionBindingConverter {
     override fun convertValue(data: Data?): Input? = if (data != null) expression(data) else null
 }
 
-class NullableInputExpressionBindingConverter<Data, out Input>(val expression: (Data?) -> Input,
-                                                               val property: KProperty<*>? = null,
-                                                               override val component: BindingRegister<Data>) : BindingConverter<Data, Input> {
+class NullableInputExpressionBindingConverter<Data, out Input>(
+        val expression: (Data?) -> Input,
+        override val property: KProperty<*>? = null,
+        override val component: BindingRegister<Data>)
+    : BindingConverter<Data, Input>, PropertyExpressionBindingConverter {
     override fun convertValue(data: Data?) = expression(data)
+}
+
+internal interface PropertyExpressionBindingConverter {
+    val property: KProperty<*>?
 }
