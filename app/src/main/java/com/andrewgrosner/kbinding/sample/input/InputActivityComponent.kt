@@ -3,16 +3,15 @@ package com.andrewgrosner.kbinding.sample.input
 import android.graphics.Color
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import com.andrewgrosner.kbinding.anko.BindingComponent
-import com.andrewgrosner.kbinding.anko.bind
+import com.andrewgrosner.kbinding.anko.bindSelf
 import com.andrewgrosner.kbinding.bindings.onIsNotNullOrEmpty
 import com.andrewgrosner.kbinding.bindings.onNullable
-import com.andrewgrosner.kbinding.bindings.onSelf
 import com.andrewgrosner.kbinding.bindings.toFieldFromCompound
 import com.andrewgrosner.kbinding.bindings.toFieldFromText
 import com.andrewgrosner.kbinding.bindings.toObservable
 import com.andrewgrosner.kbinding.bindings.toOnCheckedChange
+import com.andrewgrosner.kbinding.bindings.toShowHideView
 import com.andrewgrosner.kbinding.bindings.toText
-import com.andrewgrosner.kbinding.bindings.toViewVisibilityB
 import com.andrewgrosner.kbinding.bindings.twoWay
 import com.andrewgrosner.kbinding.sample.R
 import org.jetbrains.anko.AnkoContext
@@ -45,7 +44,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                         bindSelf(InputActivityViewModel::firstName).toText(this)
                         bind(InputActivityViewModel::firstName)
                                 .onIsNotNullOrEmpty()
-                                .toViewVisibilityB(this)
+                                .toShowHideView(this)
 
                         setOnClickListener { viewModel?.onFirstNameClick() }
                     }.lparams {
@@ -77,8 +76,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
 
                 editText {
                     hint = "Text mirrors below (One way to source)"
-                    bind(this).onSelf()
-                            .toObservable { it.oneWaySourceInput }
+                    bindSelf(this).toObservable { it.oneWaySourceInput }
                 }
 
                 textView {

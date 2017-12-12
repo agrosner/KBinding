@@ -8,7 +8,7 @@ import org.jetbrains.anko.AnkoContext
 import org.jetbrains.anko.datePicker
 import org.jetbrains.anko.textView
 import org.jetbrains.anko.verticalLayout
-import java.util.*
+import java.util.Calendar
 
 class CalendarActivityComponent(viewModel: CalendarActivityViewModel)
     : BindingComponent<CalendarActivity, CalendarActivityViewModel>(viewModel) {
@@ -17,7 +17,10 @@ class CalendarActivityComponent(viewModel: CalendarActivityViewModel)
         verticalLayout {
             textView {
                 bindSelf { it.currentTime }.toView(this) { _, value ->
-                    text = "Current Date is ${value?.get(Calendar.MONTH)}/${value?.get(Calendar.DAY_OF_MONTH)}/${value?.get(Calendar.YEAR)}"
+                    val date = value?.let {
+                        "${value.get(Calendar.MONTH)}/${value.get(Calendar.DAY_OF_MONTH)}/${value.get(Calendar.YEAR)}"
+                    }
+                    text = "Current Date is $date"
                 }
             }
 

@@ -149,7 +149,7 @@ infix fun <Input, TBinding : BindingConverter<*, Input>>
  * in previous expressions. If true, [View.VISIBLE] is used, otherwise it's set to [View.GONE]
  */
 infix fun <Input, TBinding : BindingConverter<*, Input>>
-        OneWayExpression<*, Input, Boolean, TBinding>.toViewVisibilityB(textView: View)
+        OneWayExpression<*, Input, Boolean, TBinding>.toShowHideView(textView: View)
         = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value != null && value) View.VISIBLE else View.GONE) })
 
 /**
