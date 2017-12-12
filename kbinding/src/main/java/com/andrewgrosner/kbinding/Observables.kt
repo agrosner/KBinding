@@ -109,7 +109,7 @@ class ObservableFieldImpl<T>(_value: T, private val configureClosure: PropertyCh
 /**
  * Creates new instance of the [Observable] field.
  */
-fun <T> observable(initialValue: T, change: PropertyChangedCallback)
+fun <T> observable(initialValue: T, change: PropertyChangedCallback? = null)
         = ObservableFieldImpl(initialValue, change)
 
 /**

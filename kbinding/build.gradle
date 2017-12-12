@@ -16,9 +16,10 @@ android {
 }
 
 dependencies {
-    compile deps.kotlin
-    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
-    compile "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+    api deps.kotlin
+    compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
 }
 
 kotlin {

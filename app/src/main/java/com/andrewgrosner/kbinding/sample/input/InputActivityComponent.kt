@@ -88,6 +88,7 @@ class InputActivityComponent(viewModel: InputActivityViewModel)
                             .twoWay().toFieldFromCompound().onExpression { _, input ->
                         text = if (input == true) "On" else "Off"
                     }
+
                 }
 
                 button {
