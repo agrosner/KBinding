@@ -20,6 +20,7 @@ fun View.boolean(resId: Int) = context.resources.getBoolean(resId)
 
 fun View.text(resId: Int) = context.getText(resId)!!
 
+@Suppress("DEPRECATION")
 fun View.color(colorRes: Int): Int {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         context.getColor(colorRes)
@@ -28,6 +29,7 @@ fun View.color(colorRes: Int): Int {
     }
 }
 
+@Suppress("DEPRECATION")
 fun View.drawable(drawableRes: Int): Drawable {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         context.getDrawable(drawableRes)!!

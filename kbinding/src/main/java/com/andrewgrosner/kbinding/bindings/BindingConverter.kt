@@ -1,8 +1,8 @@
 package com.andrewgrosner.kbinding.bindings
 
 import com.andrewgrosner.kbinding.BindingRegister
-import com.andrewgrosner.kbinding.Observable
 import com.andrewgrosner.kbinding.ObservableField
+import com.andrewgrosner.kbinding.PropertyChangedCallback
 import kotlin.reflect.KProperty
 
 
@@ -32,20 +32,18 @@ class ObservableBindingConverter<Data, Input>(val function: (Data) -> Observable
 
     override fun bind(binding: Binding) {
         this.oneWayBinding = binding
-        observableField?.addOnPropertyChangedCallback(this::onPropertyChanged)
+        observableField?.addOnPropertyChangedCallback(onPropertyChanged)
     }
 
     override fun unbind(binding: Binding) {
         observableField?.let { observableField ->
-            observableField.removeOnPropertyChangedCallback(this::onPropertyChanged)
+            observableField.removeOnPropertyChangedCallback(onPropertyChanged)
             observableField.unregisterFromBinding()
         }
         this.oneWayBinding = null
     }
 
-    fun onPropertyChanged(observable: Observable, kProperty: KProperty<*>?) {
-        oneWayBinding?.notifyValueChange()
-    }
+    private val onPropertyChanged: PropertyChangedCallback = { _, _ -> oneWayBinding?.notifyValueChange() }
 }
 
 class InputExpressionBindingConverter<Data, out Input>(
