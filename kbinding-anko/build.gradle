@@ -19,16 +19,9 @@ android {
 dependencies {
     implementation project(':kbinding')
     api deps.kotlin
-    api "org.jetbrains.anko:anko-sdk15:$anko_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+    api deps.anko
+    api deps.coroutines_core
+    api deps.coroutines_android
 }
-
-kotlin {
-    experimental {
-        coroutines 'enable'
-    }
-}
-
 
 apply from: '../kotlin-artifacts.gradle'

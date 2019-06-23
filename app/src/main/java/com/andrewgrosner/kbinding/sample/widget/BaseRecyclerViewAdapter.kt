@@ -138,12 +138,12 @@ abstract class BaseRecyclerViewAdapter<TModel, VH : BaseViewHolder<TModel>>
 
     protected fun notifyItemsListChanged() = notifyDataSetChanged()
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView?) {
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
         mainHandler = Handler(Looper.getMainLooper())
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView?) {
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
         mainHandler = null
     }

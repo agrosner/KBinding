@@ -23,7 +23,7 @@ android {
 }
 
 def anko_version = '0.10.3'
-def support_version = "27.0.2"
+def support_version = "27.1.1"
 
 dependencies {
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -33,12 +33,15 @@ dependencies {
     implementation "com.android.support:design:$support_version"
     implementation "com.android.support:recyclerview-v7:$support_version"
 
+    implementation deps.kotlin
+    implementation deps.kotlin_reflect
+
     implementation project(':kbinding')
     implementation project(':kbinding-anko')
     implementation "org.jetbrains.anko:anko-appcompat-v7:$anko_version"
-    implementation "org.jetbrains.anko:anko-sdk15:$anko_version"
-    implementation "org.jetbrains.anko:anko-recyclerview-v7:$anko_version"
+    implementation deps.anko
+    implementation deps.anko_recyclerview
 
     testImplementation 'junit:junit:4.12'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation deps.kotlin
 }

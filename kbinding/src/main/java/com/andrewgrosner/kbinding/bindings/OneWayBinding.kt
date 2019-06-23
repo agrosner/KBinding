@@ -14,9 +14,11 @@ import com.andrewgrosner.kbinding.viewextensions.setRatingIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setTextIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setTimeIfNecessary
 import com.andrewgrosner.kbinding.viewextensions.setVisibilityIfNeeded
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 typealias BindingExpression<Input, Output> = (Input) -> Output
@@ -83,8 +85,7 @@ fun <Data, TChar : CharSequence?, TBinding : BindingConverter<Data, TChar>> TBin
 
 class OneWayExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>>(
         val converter: Converter, val expression: BindingExpression<Input?, Output?>) {
-    fun <V : View> toView(view: V, viewExpression: (V, Output?) -> Unit)
-            = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
+    fun <V : View> toView(view: V, viewExpression: (V, Output?) -> Unit) = OneWayBinding<Data, Input, Output, Converter, V>(this).toView(view, viewExpression)
 
 }
 
@@ -95,7 +96,7 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
     var viewExpression: ((V, Output?) -> Unit)? = null
     var view: V? = null
 
-    private var deferredUI: Deferred<Unit>? = null
+    private var deferredUI: Job? = null
 
     fun evaluateBinding() = oneWayExpression.expression(converter.convertValue(converter.component.viewModel))
 
@@ -127,13 +128,15 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
         viewExpression?.let { viewExpression ->
             this@OneWayBinding.view?.let { view ->
                 deferredUI?.cancel()
-                deferredUI = async(UI) {
+                deferredUI = GlobalScope.launch(Dispatchers.Main) {
                     val value = async { evaluateBinding() }.await()
                     viewExpression(view, value)
+                    deferredUI = null
                 }
             }
         }
     }
+
 }
 
 /**
@@ -141,49 +144,42 @@ internal constructor(val oneWayExpression: OneWayExpression<Data, Input, Output,
  * in previous expressions. The [Int] aligns with [View] visibility ints.
  */
 infix fun <Input, TBinding : BindingConverter<*, Input>>
-        OneWayExpression<*, Input, Int, TBinding>.toViewVisibility(textView: View)
-        = toView(textView, View::setVisibilityIfNeeded)
+        OneWayExpression<*, Input, Int, TBinding>.toViewVisibility(textView: View) = toView(textView, View::setVisibilityIfNeeded)
 
 /**
  * Immediately binds the [View] to the value of this binding. Toggles visibility based on [Boolean] returned
  * in previous expressions. If true, [View.VISIBLE] is used, otherwise it's set to [View.GONE]
  */
 infix fun <Input, TBinding : BindingConverter<*, Input>>
-        OneWayExpression<*, Input, Boolean, TBinding>.toShowHideView(textView: View)
-        = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value != null && value) View.VISIBLE else View.GONE) })
+        OneWayExpression<*, Input, Boolean, TBinding>.toShowHideView(textView: View) = toView(textView, { view, value -> view.setVisibilityIfNeeded(if (value != null && value) View.VISIBLE else View.GONE) })
 
 /**
  * Immediately binds the [TextView] to the value of this binding. Subsequent changes are handled by
  * the kind of object it is.
  */
 infix fun <Data, Input, TBinding : BindingConverter<Data, Input>, TChar : CharSequence?>
-        OneWayExpression<Data, Input, TChar, TBinding>.toText(textView: TextView)
-        = toView(textView, TextView::setTextIfNecessary)
+        OneWayExpression<Data, Input, TChar, TBinding>.toText(textView: TextView) = toView(textView, TextView::setTextIfNecessary)
 
 /**
  * Binds the output of the initial expression to [CompoundButton.setChecked] method.
  */
 infix fun <Data, Input, TBinding : BindingConverter<Data, Input>>
-        OneWayExpression<Data, Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton)
-        = toView(compoundButton, CompoundButton::setCheckedIfNecessary)
+        OneWayExpression<Data, Input, Boolean, TBinding>.toOnCheckedChange(compoundButton: CompoundButton) = toView(compoundButton, CompoundButton::setCheckedIfNecessary)
 
 /**
  * Binds the output of the initial expression to [DatePicker.updateDate] method.
  */
 infix fun <Data, Input, TBinding : ObservableBindingConverter<Data, Input>>
-        OneWayExpression<Data, Input, Calendar, TBinding>.toDatePicker(datePicker: DatePicker)
-        = toView(datePicker, DatePicker::setTimeIfNecessary)
+        OneWayExpression<Data, Input, Calendar, TBinding>.toDatePicker(datePicker: DatePicker) = toView(datePicker, DatePicker::setTimeIfNecessary)
 
 /**
  * Binds the output of the initial expression to [RatingBar.setRating] method.
  */
 infix fun <Data, Input, TBinding : BindingConverter<Data, Input>>
-        OneWayExpression<Data, Input, Float, TBinding>.toRating(ratingBar: RatingBar)
-        = toView(ratingBar, RatingBar::setRatingIfNecessary)
+        OneWayExpression<Data, Input, Float, TBinding>.toRating(ratingBar: RatingBar) = toView(ratingBar, RatingBar::setRatingIfNecessary)
 
 /**
  * Binds the output of the initial expression to [ProgressBar.setProgress] method.
  */
 infix fun <Data, Input, TBinding : BindingConverter<Data, Input>>
-        OneWayExpression<Data, Input, Int, TBinding>.toProgressBar(progressBar: ProgressBar)
-        = toView(progressBar, ProgressBar::setProgressIfNecessary)
+        OneWayExpression<Data, Input, Int, TBinding>.toProgressBar(progressBar: ProgressBar) = toView(progressBar, ProgressBar::setProgressIfNecessary)

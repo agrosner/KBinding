@@ -9,8 +9,10 @@ import android.widget.TextView
 import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BaseObservable
 import com.andrewgrosner.kbinding.BindingHolder
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 fun <Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
@@ -18,8 +20,7 @@ fun <Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>
 
 class TwoWayBindingExpression<Data, Input, Output, Converter : BindingConverter<Data, Input>, V : View>(
         val oneWayBinding: OneWayBinding<Data, Input, Output, Converter, V>) {
-    fun toInput(viewRegister: ViewRegister<V, Output>, inverseSetter: (InverseSetter<Data, Output>))
-            = TwoWayBinding(this, viewRegister, inverseSetter)
+    fun toInput(viewRegister: ViewRegister<V, Output>, inverseSetter: (InverseSetter<Data, Output>)) = TwoWayBinding(this, viewRegister, inverseSetter)
 }
 
 
@@ -57,7 +58,7 @@ internal constructor(
     override fun bind() {
         oneWayBinding.bind()
         viewRegister.register(oneWayBinding.view!!, { output ->
-            async(UI) { notifyViewChanged(output) }
+            GlobalScope.launch { async { notifyViewChanged(output) }.await() }
         })
         oneWayBinding.notifyValueChange() // trigger value change on bind to respect value of ViewModel over view.
     }
@@ -91,7 +92,7 @@ internal constructor(
      * Notifies change manually from the current value of the field bound to it. Runs a non-blocking coroutine.
      */
     fun notifyViewChanged() {
-        async(UI) {
+        GlobalScope.launch(Dispatchers.Main) {
             val value = async { oneWayBinding.evaluateBinding() }.await()
             notifyViewChanged(value)
         }
@@ -109,8 +110,7 @@ fun <Data> TwoWayBindingExpression<Data, String, String,
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
                 observableField.value = input ?: observableField.defaultValue
             }
-        })
-        = toInput(OnTextChangedRegister(), inverseSetter)
+        }) = toInput(OnTextChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [TextView] to the specified expression in a two way binding.
@@ -121,8 +121,7 @@ fun <Data> TwoWayBindingExpression<Data, String, String,
  */
 fun <Data> TwoWayBindingExpression<Data, String, String,
         BindingConverter<Data, String>, TextView>.toExprFromText(
-        inverseSetter: InverseSetter<Data, String?>)
-        = toInput(OnTextChangedRegister(), inverseSetter)
+        inverseSetter: InverseSetter<Data, String?>) = toInput(OnTextChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [CompoundButton] to the specified observable field in a two way binding.
@@ -134,8 +133,7 @@ fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean, ObservableBindingConv
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
                 observableField.value = input ?: observableField.defaultValue
             }
-        })
-        = toInput(OnCheckedChangeRegister(), inverseSetter)
+        }) = toInput(OnCheckedChangeRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [CompoundButton] to the specified expression in a two way binding.
@@ -146,8 +144,7 @@ fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean, ObservableBindingConv
  */
 fun <Data> TwoWayBindingExpression<Data, Boolean, Boolean,
         BindingConverter<Data, Boolean>, CompoundButton>.toExprFromCompound(
-        inverseSetter: InverseSetter<Data, Boolean>)
-        = toInput(OnCheckedChangeRegister(), inverseSetter)
+        inverseSetter: InverseSetter<Data, Boolean>) = toInput(OnCheckedChangeRegister(), inverseSetter)
 
 
 /**
@@ -160,8 +157,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
                 observableField.value = input ?: observableField.defaultValue
             }
-        })
-        = toInput(OnDateChangedRegister(oneWayBinding.evaluateBinding()), inverseSetter)
+        }) = toInput(OnDateChangedRegister(oneWayBinding.evaluateBinding()), inverseSetter)
 
 /**
  * Immediately binds changes from this [DatePicker] to the specified expression in a two way binding.
@@ -172,8 +168,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
         BindingConverter<Data, Calendar>, DatePicker>.toExprFromDate(
-        inverseSetter: InverseSetter<Data, Calendar>)
-        = toInput(OnDateChangedRegister(oneWayBinding.evaluateBinding()), inverseSetter)
+        inverseSetter: InverseSetter<Data, Calendar>) = toInput(OnDateChangedRegister(oneWayBinding.evaluateBinding()), inverseSetter)
 
 /**
  * Immediately binds changes from this [TimePicker] to the specified observable field in a two way binding.
@@ -185,8 +180,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
                 observableField.value = input ?: observableField.defaultValue
             }
-        })
-        = toInput(OnTimeChangedRegister(), inverseSetter)
+        }) = toInput(OnTimeChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [TimePicker] to the specified expression in a two way binding.
@@ -197,8 +191,7 @@ fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar, ObservableBindingCo
  */
 fun <Data> TwoWayBindingExpression<Data, Calendar, Calendar,
         BindingConverter<Data, Calendar>, TimePicker>.toExprFromTime(
-        inverseSetter: InverseSetter<Data, Calendar>)
-        = toInput(OnTimeChangedRegister(), inverseSetter)
+        inverseSetter: InverseSetter<Data, Calendar>) = toInput(OnTimeChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [RatingBar] to the specified observable field in a two way binding.
@@ -210,8 +203,7 @@ fun <Data> TwoWayBindingExpression<Data, Float, Float, ObservableBindingConverte
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
                 observableField.value = input ?: observableField.defaultValue
             }
-        })
-        = toInput(OnRatingBarChangedRegister(), inverseSetter)
+        }) = toInput(OnRatingBarChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [RatingBar] to the specified expression in a two way binding.
@@ -222,8 +214,7 @@ fun <Data> TwoWayBindingExpression<Data, Float, Float, ObservableBindingConverte
  */
 fun <Data> TwoWayBindingExpression<Data, Float, Float,
         BindingConverter<Data, Float>, RatingBar>.toExprFromRating(
-        inverseSetter: InverseSetter<Data, Float>)
-        = toInput(OnRatingBarChangedRegister(), inverseSetter)
+        inverseSetter: InverseSetter<Data, Float>) = toInput(OnRatingBarChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [SeekBar] to the specified observable field in a two way binding.
@@ -235,8 +226,7 @@ fun <Data> TwoWayBindingExpression<Data, Int, Int, ObservableBindingConverter<Da
             oneWayBinding.oneWayExpression.converter.observableField?.let { observableField ->
                 observableField.value = input ?: observableField.defaultValue
             }
-        })
-        = toInput(OnSeekBarChangedRegister(), inverseSetter)
+        }) = toInput(OnSeekBarChangedRegister(), inverseSetter)
 
 /**
  * Immediately binds changes from this [SeekBar] to the specified expression in a two way binding.
@@ -247,5 +237,4 @@ fun <Data> TwoWayBindingExpression<Data, Int, Int, ObservableBindingConverter<Da
  */
 fun <Data> TwoWayBindingExpression<Data, Int, Int,
         BindingConverter<Data, Int>, SeekBar>.toExprFromSeekBar(
-        inverseSetter: InverseSetter<Data, Int>)
-        = toInput(OnSeekBarChangedRegister(), inverseSetter)
+        inverseSetter: InverseSetter<Data, Int>) = toInput(OnSeekBarChangedRegister(), inverseSetter)

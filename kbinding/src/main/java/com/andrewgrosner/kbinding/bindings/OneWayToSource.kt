@@ -9,7 +9,9 @@ import android.widget.TextView
 import android.widget.TimePicker
 import com.andrewgrosner.kbinding.BindingRegister
 import com.andrewgrosner.kbinding.ObservableField
-import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 
@@ -24,8 +26,7 @@ class ViewBinder<Data, V : View, Output>(val view: V,
                                          val viewRegister: ViewRegister<V, Output>,
                                          val component: BindingRegister<Data>)
 
-fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.onNullable(bindingExpression: BindingExpression<Output?, Input?>)
-        = OneWayToSourceExpression(this, bindingExpression)
+fun <Data, V : View, Output, Input> ViewBinder<Data, V, Output>.onNullable(bindingExpression: BindingExpression<Output?, Input?>) = OneWayToSourceExpression(this, bindingExpression)
 
 fun <Data, V : View, Output> ViewBinder<Data, V, Output>.onSelf() = onNullable { it }
 
@@ -63,7 +64,9 @@ internal constructor(
 
     override fun bind() {
         viewRegister.register(view, { output ->
-            async { propertySetter(component.viewModel, bindingExpression(output), view) }
+            GlobalScope.launch {
+                async { propertySetter(component.viewModel, bindingExpression(output), view) }.await()
+            }
         })
         notifyValueChange()
     }

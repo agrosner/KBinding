@@ -17,15 +17,9 @@ android {
 
 dependencies {
     api deps.kotlin
-    compileOnly "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
-}
-
-kotlin {
-    experimental {
-        coroutines 'enable'
-    }
+    compileOnly deps.kotlin_reflect
+    api deps.coroutines_core
+    api deps.coroutines_android
 }
 
 apply from: '../kotlin-artifacts.gradle'
